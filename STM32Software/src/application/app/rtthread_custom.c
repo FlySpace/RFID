@@ -36,18 +36,11 @@ void rtthread_startup()
 }
 
 /*rtt空闲线程钩子*/
-int i = 0;
 static void rt_thread_idle_hook()
 {
-	if (!(i = (i + 1) % 100000))
-	{
-		rt_kprintf("systick=%d\n",rt_tick_get());
-		rt_show_version();
-	}
 }
 
 static void rt_application_init()
 {
-
 }
 

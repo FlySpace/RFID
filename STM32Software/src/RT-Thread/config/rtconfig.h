@@ -58,13 +58,13 @@
 
 /* SECTION: Device System */
 /* Using Device System */
-//#define RT_USING_DEVICE
+#define RT_USING_DEVICE
 //#define RT_USING_UART1
 
 /* SECTION: Console options */
-//#define RT_USING_CONSOLE
+#define RT_USING_CONSOLE
 /* the buffer size of console*/
-//#define RT_CONSOLEBUF_SIZE	128
+#define RT_CONSOLEBUF_SIZE	128
 
 /* SECTION: finsh, a C-Express shell */
 //#define RT_USING_FINSH

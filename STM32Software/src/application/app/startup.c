@@ -2,8 +2,6 @@
 #include"intrinsics.h"
 #include "rtthread_custom.h"
 
-void rtthread_startup();
-
 int main()
 {
 	__disable_interrupt();

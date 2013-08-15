@@ -5,6 +5,15 @@
  *      Author: Fly
  */
 
-#include"thread_boot.h"
+#include "threads.h"
+#include "rtthread.h"
+#include "stdio.h"
 
-
+void thread_boot(void * param)
+{
+	while (1)
+	{
+		rt_kprintf("thread_boot");
+		rt_thread_delay(500);
+	}
+}

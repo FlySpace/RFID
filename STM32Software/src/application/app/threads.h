@@ -5,9 +5,11 @@
  *      Author: Fly
  */
 
-#ifndef THREAD_BOOT_H_
-#define THREAD_BOOT_H_
+#ifndef THREADS_H_
+#define THREADS_H_
 
+#define THREAD_BOOT_NAME "boot"
 
+void thread_boot();
 
 #endif /* THREAD_BOOT_H_ */

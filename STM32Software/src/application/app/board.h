@@ -1,7 +1,7 @@
 #ifndef __BOARD_H__
 #define __BOARD_H__
 
-#include "rtconfig.h"
+#include "rtthread.h"
 
 #define SYS_TICK_PER_SECOND RT_TICK_PER_SECOND
 

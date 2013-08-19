@@ -11,9 +11,9 @@
 
 void thread_boot(void * param)
 {
-	while (1)
-	{
-		rt_kprintf("thread_boot");
-		rt_thread_delay(500);
-	}
+	//TODO CPU占用率功能
+	rt_thread_t control_thread = rt_thread_create("control",
+			thread_card_control, RT_NULL, 256, 2, 10);
+
+
 }

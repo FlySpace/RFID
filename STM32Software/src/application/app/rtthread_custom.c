@@ -42,7 +42,8 @@ void rtthread_startup()
 static void rt_application_init()
 {
 	rt_thread_startup(
-			rt_thread_create("boot", thread_boot, RT_NULL, 256, 0, 10));
+			rt_thread_create(THREAD_BOOT_NAME, thread_boot, RT_NULL, 256, 0,
+					10));
 }
 
 int idle_count = 0;

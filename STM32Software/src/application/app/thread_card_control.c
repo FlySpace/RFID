@@ -11,8 +11,8 @@
 void thread_card_control(void * param)
 {
 	//TODO 初始化事件
-	rt_thread_t card_thread = rt_thread_create("card", thread_card, RT_NULL,
-			128, 5, 10);
+	rt_thread_t card_thread = rt_thread_create(THREAD_CARD_NAME, thread_card,
+			RT_NULL, 128, 5, 10);
 	while (1)
 	{
 		//TODO 等待事件

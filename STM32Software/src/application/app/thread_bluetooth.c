@@ -5,3 +5,6 @@
  *      Author: Fly
  */
 
+void thread_bluetooth(void * param)
+{
+}

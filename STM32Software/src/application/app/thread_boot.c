@@ -11,9 +11,13 @@
 
 void thread_boot(void * param)
 {
-	while (1)
-	{
-		rt_kprintf("thread_boot");
-		rt_thread_delay(500);
-	}
+	//TODO CPU占用率功能
+	rt_thread_t card_control_thread = rt_thread_create(THREAD_CARD_CONTROL_NAME,
+			thread_card_control, RT_NULL, 256, 2, 10);
+	rt_thread_t bt_control_thread = rt_thread_create(THREAD_CARD_CONTROL_NAME,
+			thread_bluetooth_control, RT_NULL, 256, 3, 10);
+
+	rt_thread_startup(card_control_thread);
+	rt_thread_startup(bt_control_thread);
+
 }

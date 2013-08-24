@@ -15,14 +15,14 @@
 #define RT_TICK_PER_SECOND	1000
 
 /* SECTION: RT_DEBUG */
-//#define RT_DEBUG
+#define RT_DEBUG
 #define RT_DEBUG_MEM 1
 #define RT_DEBUG_MEMHEAP 1
 #define RT_DEBUG_MODULE 1
 #define RT_DEBUG_SCHEDULER 1
 #define RT_DEBUG_THREAD 1
-#define RT_DEBUG_TIMER 1
-#define RT_DEBUG_IRQ 1
+#define RT_DEBUG_TIMER 0
+#define RT_DEBUG_IRQ 0
 #define RT_DEBUG_IPC 1
 #define RT_DEBUG_CONTEXT_CHECK 1
 

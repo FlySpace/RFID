@@ -19,7 +19,7 @@
 #include "rtthread.h"
 #include "rtdevice.h"
 
-#define UART1_TX_BUFFER_SIZE 128
+#define UART1_TX_BUFFER_SIZE 512
 #define UART1_RX_BUFFER_SIZE 128
 #define UART2_TX_BUFFER_SIZE 128
 #define UART2_RX_BUFFER_SIZE 128

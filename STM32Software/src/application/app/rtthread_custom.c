@@ -3,11 +3,13 @@
 #include "rthw.h"
 #include "threads.h"
 #include "stm32f10x.h"
+#include "usart.h"
 
 #pragma section="RT_HEAP"
 
 static void rt_thread_idle_hook();
 static void rt_application_init();
+static void rt_console_init();
 
 /*rtt启动总入口*/
 void rtthread_startup()
@@ -26,8 +28,6 @@ void rtthread_startup()
 	rt_application_init();
 
 	rt_console_init();
-
-	rt_show_version();
 
 	rt_system_scheduler_start();
 }

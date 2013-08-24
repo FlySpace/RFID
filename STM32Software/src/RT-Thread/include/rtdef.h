@@ -3,9 +3,19 @@
  * This file is part of RT-Thread RTOS
  * COPYRIGHT (C) 2006 - 2012, RT-Thread Development Team
  *
- * The license and distribution terms for this file may be
- * found in the file LICENSE in this distribution or at
- * http://www.rt-thread.org/license/LICENSE
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  * Change Logs:
  * Date           Author       Notes
@@ -14,12 +24,13 @@
  * 2010-10-26     yi.qiu       add module support
  * 2010-11-10     Bernard      add cleanup callback function in thread exit.
  * 2011-05-09     Bernard      use builtin va_arg in GCC 4.x
- * 2012-11-16     Bernard      change RT_NULL from ((void*)0) to 0. 
+ * 2012-11-16     Bernard      change RT_NULL from ((void*)0) to 0.
  * 2012-12-29     Bernard      change the RT_USING_MEMPOOL location and add
  *                             RT_USING_MEMHEAP condition.
  * 2012-12-30     Bernard      add more control command for graphic.
+ * 2013-01-09     Bernard      change version number.
  */
- 
+
 #ifndef __RT_DEF_H__
 #define __RT_DEF_H__
 
@@ -37,8 +48,8 @@ extern "C" {
 
 /* RT-Thread version information */
 #define RT_VERSION                      1L              /**< major version number */
-#define RT_SUBVERSION                   1L              /**< minor version number */
-#define RT_REVISION                     1L              /**< revise version number */
+#define RT_SUBVERSION                   2L              /**< minor version number */
+#define RT_REVISION                     0L              /**< revise version number */
 
 /* RT-Thread version */
 #define RTTHREAD_VERSION                ((RT_VERSION * 10000) + \
@@ -82,6 +93,7 @@ typedef rt_base_t                       rt_off_t;       /**< Type for offset */
     #include <stdarg.h>
     #define SECTION(x)                  __attribute__((section(x)))
     #define UNUSED                      __attribute__((unused))
+    #define USED                        __attribute__((used))
     #define ALIGN(n)                    __attribute__((aligned(n)))
     #define rt_inline                   static __inline
     /* module compiling */
@@ -95,6 +107,7 @@ typedef rt_base_t                       rt_off_t;       /**< Type for offset */
     #include <stdarg.h>
     #define SECTION(x)                  @ x
     #define UNUSED
+    #define USED
     #define PRAGMA(x)                   _Pragma(#x)
     #define ALIGN(n)                    PRAGMA(data_alignment=n)
     #define rt_inline                   static inline
@@ -127,6 +140,7 @@ typedef rt_base_t                       rt_off_t;       /**< Type for offset */
 
     #define SECTION(x)                  __attribute__((section(x)))
     #define UNUSED                      __attribute__((unused))
+    #define USED                        __attribute__((used))
     #define ALIGN(n)                    __attribute__((aligned(n)))
     #define rt_inline                   static __inline
     #define RTT_API
@@ -134,17 +148,48 @@ typedef rt_base_t                       rt_off_t;       /**< Type for offset */
     #include <stdarg.h>
     #define SECTION(x)                  __attribute__((section(x)))
     #define UNUSED                      __attribute__((unused))
+    #define USED                        __attribute__((used))
     #define ALIGN(n)                    __attribute__((aligned(n)))
     #define rt_inline                   static inline
-    #define RTT_API 
+    #define RTT_API
 #elif defined (_MSC_VER)
     #include <stdarg.h>
     #define SECTION(x)
     #define UNUSED
+    #define USED
     #define ALIGN(n)                    __declspec(align(n))
     #define rt_inline                   static __inline
     #define RTT_API
+#elif defined (__TI_COMPILER_VERSION__)
+    /* The way that TI compiler set section is different from other(at least
+     * GCC and MDK) compilers. See ARM Optimizing C/C++ Compiler 5.9.3 for more
+     * details. */
+    #define SECTION(x)
+    #define UNUSED
+    #define USED
+    #define ALIGN(n)
+    #define rt_inline                   static inline
+    #define RTT_API
+#else
+    #error not supported tool chain
 #endif
+
+/* initialization export */
+#ifdef RT_USING_COMPONENTS_INIT
+typedef int (*init_fn_t)(void);
+#define INIT_EXPORT(fn, level)  \
+    const init_fn_t __rt_init_##fn SECTION(".rti_fn."level) = fn
+#else
+#define INIT_EXPORT(fn, level)
+#endif
+
+/* board init routines will be called in board_init() function */
+#define INIT_BOARD_EXPORT(fn)           INIT_EXPORT(fn, "1")
+/* device/component/fs/app init routines will be called in init_thread */
+#define INIT_DEVICE_EXPORT(fn)          INIT_EXPORT(fn, "2")
+#define INIT_COMPONENT_EXPORT(fn)       INIT_EXPORT(fn, "3")
+#define INIT_FS_EXPORT(fn)              INIT_EXPORT(fn, "4")
+#define INIT_APP_EXPORT(fn)             INIT_EXPORT(fn, "5")
 
 /* event length */
 #define RT_EVENT_LENGTH                 32
@@ -156,15 +201,15 @@ typedef rt_base_t                       rt_off_t;       /**< Type for offset */
 
 /* kernel malloc definitions */
 #ifndef RT_KERNEL_MALLOC
-#define RT_KERNEL_MALLOC(sz)			rt_malloc(sz)
+#define RT_KERNEL_MALLOC(sz)            rt_malloc(sz)
 #endif
 
 #ifndef RT_KERNEL_FREE
-#define RT_KERNEL_FREE(ptr)				rt_free(ptr)
+#define RT_KERNEL_FREE(ptr)             rt_free(ptr)
 #endif
 
 #ifndef RT_KERNEL_REALLOC
-#define RT_KERNEL_REALLOC(ptr, size)	rt_realloc(ptr, size)
+#define RT_KERNEL_REALLOC(ptr, size)    rt_realloc(ptr, size)
 #endif
 
 /**
@@ -200,7 +245,7 @@ typedef rt_base_t                       rt_off_t;       /**< Type for offset */
  *
  * @def RT_ALIGN_DOWN(size, align)
  * Return the down number of aligned at specified width. RT_ALIGN_DOWN(13, 4)
- * would return 12. 
+ * would return 12.
  */
 #define RT_ALIGN_DOWN(size, align)      ((size) & ~((align) - 1))
 
@@ -315,7 +360,7 @@ struct rt_object_information
 #define RT_OBJECT_HOOK_CALL(func, argv) \
     do { if ((func) != RT_NULL) func argv; } while (0)
 #else
-#define RT_OBJECT_HOOK_CALL(func, argv) 
+#define RT_OBJECT_HOOK_CALL(func, argv)
 #endif
 
 /*@}*/
@@ -398,7 +443,7 @@ struct rt_thread
     char        name[RT_NAME_MAX];                      /**< the name of thread */
     rt_uint8_t  type;                                   /**< type of object */
     rt_uint8_t  flags;                                  /**< thread's flags */
-    
+
 #ifdef RT_USING_MODULE
     void       *module_id;                              /**< id of application module */
 #endif
@@ -671,7 +716,7 @@ enum rt_device_class_type
     RT_Device_Class_SPIDevice,                          /**< SPI device */
     RT_Device_Class_SDIO,                               /**< SDIO bus device */
     RT_Device_Class_PM,                                 /**< PM pseudo device */
-    RT_Device_Class_Miscellaneous,						/**< Miscellaneous device */
+    RT_Device_Class_Miscellaneous,                      /**< Miscellaneous device */
     RT_Device_Class_Unknown                             /**< unknown device */
 };
 
@@ -888,7 +933,7 @@ struct rt_module
     struct rt_module_symtab     *symtab;                /**< module symbol table */
 
     rt_uint32_t                  nref;                  /**< reference count */
-    
+
     /* object in this module, module object is the last basic object type */
     struct rt_object_information module_object[RT_Object_Class_Unknown];
 };

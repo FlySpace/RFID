@@ -65,6 +65,7 @@
 /* SECTION: Device System */
 /* Using Device System */
 #define RT_USING_DEVICE
+//#define RT_USING_SERIAL
 //#define RT_USING_UART1
 
 /* SECTION: Console options */
@@ -76,10 +77,12 @@
 #define IDLE_THREAD_STACK_SIZE 128
 
 /* SECTION: finsh, a C-Express shell */
-//#define RT_USING_FINSH
+#define RT_USING_FINSH
+
 /* Using symbol table */
-//#define FINSH_USING_SYMTAB
-//#define FINSH_USING_DESCRIPTION
+#define FINSH_USING_SYMTAB
+#define FINSH_USING_DESCRIPTION
+
 /* SECTION: device filesystem */
 /* #define RT_USING_DFS */
 

@@ -54,6 +54,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/RT-Thread/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/application/drivers}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/application/app}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/RT-Thread/components/finsh}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/RT-Thread/components/drivers/include}&quot;"/>
 								</option>
 								<option id="iar.arm.toolchain.compiler.option.listFile.v5.4.0.1214308649" name="Output list file:" superClass="iar.arm.toolchain.compiler.option.listFile.v5.4.0" value="iar.arm.toolchain.compiler.option.listFile.mnemonicsAndDiagnostics.v5.4.0" valueType="enumerated"/>
 								<option id="iar.arm.toolchain.compiler.option.asmFile.v5.4.0.1549960275" name="Output assembler file:" superClass="iar.arm.toolchain.compiler.option.asmFile.v5.4.0" value="iar.arm.toolchain.compiler.option.asmFile.source.v5.4.0" valueType="enumerated"/>

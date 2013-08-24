@@ -15,15 +15,40 @@
 #ifndef __USART_H__
 #define __USART_H__
 
-#define RT_USING_UART1
-#define RT_USING_UART2
-
-//#include <rthw.h>
-//#include <rtthread.h>
 #include "stm32f10x.h"
+#include "rtthread.h"
+#include "rtdevice.h"
 
+#define UART1_TX_BUFFER_SIZE 128
+#define UART1_RX_BUFFER_SIZE 128
+#define UART2_TX_BUFFER_SIZE 128
+#define UART2_RX_BUFFER_SIZE 128
 
-unsigned int crc16(unsigned char *ptr,unsigned char count);
-void rt_hw_usart_init(void);
+struct UARTDevice
+{
+	struct rt_device parent;
+	USART_TypeDef * USARTx;
+	struct rt_ringbuffer pTxBuffer;
+	struct rt_ringbuffer pRxBuffer;
+	void (*onTxBufferChange)(struct UARTDevice * pUART);
+	void (*onRxBufferChange)(struct UARTDevice * pUART);
+};
+
+enum UARTControlCmd
+{
+	CONFIGURE, SET_ON_TX_BUFFER_CHANGE, SET_ON_RX_BUFFER_CHANGE
+};
+
+struct UARTControlArgConfigure
+{
+	uint32_t USART_BaudRate;
+	uint16_t USART_WordLength;
+	uint16_t USART_StopBits;
+	uint16_t USART_Parity;
+	uint16_t USART_HardwareFlowControl;
+};
+
+unsigned int crc16(unsigned char *ptr, unsigned char count);
+void rt_hw_usart_init();
 
 #endif

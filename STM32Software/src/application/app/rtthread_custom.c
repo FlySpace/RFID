@@ -1,27 +1,17 @@
 #include "rtthread_custom.h"
 #include "rtthread.h"
 #include "rthw.h"
-#include "stdio.h"
 #include "threads.h"
+#include "stm32f10x.h"
 
 #pragma section="RT_HEAP"
 
 static void rt_thread_idle_hook();
 static void rt_application_init();
 
-/*配置rt_kprintf的输出到IAR运行库的标准输出*/
-void rt_hw_console_output(const char *str)
-{
-	puts(str);
-}
-
 /*rtt启动总入口*/
 void rtthread_startup()
 {
-	rt_console_set_device("uart1");
-
-	rt_show_version();
-
 	rt_system_heap_init(__section_begin("RT_HEAP"), __section_end("RT_HEAP"));
 
 	rt_device_init_all();
@@ -35,7 +25,25 @@ void rtthread_startup()
 
 	rt_application_init();
 
+	rt_console_init();
+
+	rt_show_version();
+
 	rt_system_scheduler_start();
+}
+
+static void rt_console_init()
+{
+	rt_device_t pUart1 = rt_device_find("uart1");
+	struct UARTControlArgConfigure config;
+	config.USART_BaudRate = 115200;
+	config.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+	config.USART_Parity = USART_Parity_No;
+	config.USART_StopBits = USART_StopBits_1;
+	config.USART_WordLength = USART_WordLength_8b;
+	rt_device_control(pUart1, CONFIGURE, &config);
+
+	rt_console_set_device("uart1");
 }
 
 /*用户线程初始化*/

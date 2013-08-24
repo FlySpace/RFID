@@ -238,7 +238,7 @@ static rt_err_t uartControl(struct rt_device *dev, rt_uint8_t cmd, void *args)
 		USART_InitStructure.USART_HardwareFlowControl = pArg->USART_HardwareFlowControl;
 		USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
 		USART_Init(pUart->USARTx, &USART_InitStructure);
-		return (RT_EOK);
+		break;
 	}
 	case SET_ON_RX_BUFFER_CHANGE:
 	{
@@ -247,7 +247,7 @@ static rt_err_t uartControl(struct rt_device *dev, rt_uint8_t cmd, void *args)
 		{
 			pUart->onRxBufferChange(pUart);
 		}
-		return (RT_EOK);
+		break;
 	}
 	case SET_ON_TX_BUFFER_CHANGE:
 	{
@@ -256,7 +256,7 @@ static rt_err_t uartControl(struct rt_device *dev, rt_uint8_t cmd, void *args)
 		{
 			pUart->onTxBufferChange(pUart);
 		}
-		return (RT_EOK);
+		break;
 	}
 	}
 
@@ -329,7 +329,6 @@ void rt_hw_usart_init()
 
 	USART_Configuration();
 
-	/* register uart1 */
 	uartRegister(&uart1, "uart1",
 			RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX | RT_DEVICE_FLAG_INT_TX | RT_DEVICE_FLAG_STREAM, RT_NULL,
 			uart1Init);

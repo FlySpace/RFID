@@ -18,7 +18,7 @@ void rt_hw_console_output(const char *str)
 /*rtt启动总入口*/
 void rtthread_startup()
 {
-	rt_console_set_device(RT_NULL);
+	rt_console_set_device("uart1");
 
 	rt_show_version();
 
@@ -41,9 +41,7 @@ void rtthread_startup()
 /*用户线程初始化*/
 static void rt_application_init()
 {
-	rt_thread_startup(
-			rt_thread_create(THREAD_BOOT_NAME, thread_boot, RT_NULL, 256, 0,
-					10));
+	rt_thread_startup(rt_thread_create(THREAD_BOOT_NAME, thread_boot, RT_NULL, 256, 0, 10));
 }
 
 int idle_count = 0;

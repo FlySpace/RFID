@@ -25,5 +25,6 @@
 
 unsigned int crc16(unsigned char *ptr,unsigned char count);
 void rt_hw_usart_init(void);
+void USART1_BT_Tx(uint8_t *BTTxArray);
 
 #endif

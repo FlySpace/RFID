@@ -17,6 +17,13 @@
 //#include <serial.h>
 #include <stm32f10x_dma.h>
 
+
+uint8_t a[]={0xBB,0x00,0x27,0x00,0x03,0x22,0x00,0x64,0x7E};
+__IO uint16_t BTTxCnt1;
+uint8_t *BTTXS;
+__IO uint16_t BTTxLen;
+
+
 /*
  * Use UART1 as console output and finsh input
  * interrupt Rx and poll Tx (stream mode)
@@ -33,7 +40,7 @@
  * USART3 Rx --> DMA Channel 3
  */
 
-//#ifdef RT_USING_UART1                         //RTTÏà¹Ø½á¹¹Ìå,ÏÈ×¢ÊÍµô
+//#ifdef RT_USING_UART1                         //RTTç›¸å…³ç»“æ„ä½“,å…ˆæ³¨é‡Šæ‰
 //struct stm32_serial_int_rx uart1_int_rx;
 //struct stm32_serial_device uart1 =
 //{
@@ -286,7 +293,7 @@ unsigned int crc16(unsigned char *ptr,unsigned char count)
 	return crc;
 }
 
-//unsigned short crc16(unsigned char d[], int len)    //µÚ¶şÖÖcrc16Ğ£Ñéº¯Êı
+//unsigned short crc16(unsigned char d[], int len)    //å¦ä¸€ç§crc16è®¡ç®—æ–¹æ³•
 //{
 //  unsigned char b = 0;
 //  unsigned short crc = 0xFFFF;
@@ -308,7 +315,7 @@ unsigned int crc16(unsigned char *ptr,unsigned char count)
  * Init all related hardware in here
  * rt_hw_serial_init() will register all supported USART device
  */
-void rt_hw_usart_init()
+void rt_hw_usart_init(void)
 {
 	RCC_Configuration();
 
@@ -329,3 +336,24 @@ void rt_hw_usart_init()
 //		&uart2);
 
 }
+
+void USART2_RFID_RxDataProcess(void)
+{
+
+}
+
+void USART1_BT_Rx()
+{
+
+}
+
+void USART1_BT_Tx(uint8_t *BTTxArray)
+{
+	BTTxCnt1=0;
+	BTTXS=BTTxArray;
+	BTTxLen=(uint16_t)0x0100*BTTxArray[3]+(uint16_t)BTTxArray[4]+0x0006;
+	USART_ITConfig(USART1, USART_IT_TXE,ENABLE);
+}
+
+
+

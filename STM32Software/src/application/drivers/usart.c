@@ -202,7 +202,7 @@ static rt_size_t uartWrite(struct rt_device *dev, rt_off_t pos, const void *buff
 
 	rt_size_t length = 0;
 
-	if (rt_interrupt_get_nest() > 0)
+	if (rt_interrupt_get_nest() > 0 || rt_thread_self() == RT_NULL)
 	{
 		length += rt_ringbuffer_put(&pUart->pTxBuffer, buffer, size);
 	}

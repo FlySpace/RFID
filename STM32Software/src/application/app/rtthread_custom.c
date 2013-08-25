@@ -4,6 +4,7 @@
 #include "threads.h"
 #include "stm32f10x.h"
 #include "usart.h"
+#include "shell.h"
 
 #pragma section="RT_HEAP"
 
@@ -28,6 +29,9 @@ void rtthread_startup()
 	rt_application_init();
 
 	rt_console_init();
+
+	finsh_system_init();
+	finsh_set_device("uart1");
 
 	rt_system_scheduler_start();
 }

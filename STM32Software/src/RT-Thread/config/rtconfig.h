@@ -15,7 +15,7 @@
 #define RT_TICK_PER_SECOND	1000
 
 /* SECTION: RT_DEBUG */
-#define RT_DEBUG
+//#define RT_DEBUG
 #define RT_DEBUG_MEM 1
 #define RT_DEBUG_MEMHEAP 1
 #define RT_DEBUG_MODULE 1

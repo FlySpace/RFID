@@ -49,7 +49,7 @@ static void rt_console_init()
 /*用户线程初始化*/
 static void rt_application_init()
 {
-	rt_thread_startup(rt_thread_create(THREAD_BOOT_NAME, thread_boot, RT_NULL, 256, 0, 10));
+	rt_thread_startup(rt_thread_create(THREAD_BOOT_NAME, thread_boot, RT_NULL, 512, 0, 10));
 }
 
 int idle_count = 0;
@@ -68,5 +68,3 @@ void SysTick_Handler()
 	rt_tick_increase();
 	rt_interrupt_leave();
 }
-
-/*定时器中断*/

@@ -146,18 +146,18 @@ static rt_err_t uart1Init(rt_device_t dev)
 	rt_base_t l = rt_hw_interrupt_disable();
 
 	uart1.USARTx = USART1;
-	dev->flag |= RT_DEVICE_FLAG_ACTIVATED;
+	rt_mutex_init(&uart1.writeLock, "", RT_IPC_FLAG_PRIO);
 	rt_ringbuffer_init(&uart1.pRxBuffer, UART1RxBuffer, UART1_RX_BUFFER_SIZE);
 	rt_ringbuffer_init(&uart1.pTxBuffer, UART1TxBuffer, UART1_TX_BUFFER_SIZE);
-	uart1.onTxBufferChange = RT_NULL;
-	uart1.onRxBufferChange = RT_NULL;
 	struct UARTControlArgConfigure config;
 	config.USART_BaudRate = 9600;
 	config.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
 	config.USART_Parity = USART_Parity_No;
-	config.USART_StopBits = USART_StopBits_2;
+	config.USART_StopBits = USART_StopBits_1;
 	config.USART_WordLength = USART_WordLength_8b;
 	rt_device_control(&uart1.parent, CONFIGURE, &config);
+
+	dev->flag |= RT_DEVICE_FLAG_ACTIVATED;
 
 	rt_hw_interrupt_enable(l);
 	return (RT_EOK);
@@ -172,14 +172,6 @@ static rt_err_t uartOpen(struct rt_device *dev, rt_uint16_t oflag)
 	USART_ITConfig(pUart->USARTx, USART_IT_TXE, DISABLE);
 	USART_ClearITPendingBit(pUart->USARTx, USART_IT_RXNE );
 	USART_ClearITPendingBit(pUart->USARTx, USART_IT_TXE );
-	if (pUart->onRxBufferChange != RT_NULL)
-	{
-		pUart->onRxBufferChange(pUart);
-	}
-	if (pUart->onTxBufferChange != RT_NULL)
-	{
-		pUart->onTxBufferChange(pUart);
-	}
 
 	rt_hw_interrupt_enable(l);
 	return (RT_EOK);
@@ -201,21 +193,42 @@ static rt_size_t uartRead(struct rt_device *dev, rt_off_t pos, void *buffer, rt_
 {
 	struct UARTDevice * pUart = (struct UARTDevice *) dev;
 	rt_size_t length = rt_ringbuffer_get(&pUart->pRxBuffer, buffer, size);
-	if (pUart->onRxBufferChange != RT_NULL)
-	{
-		pUart->onRxBufferChange(pUart);
-	}
 	return (length);
 }
 
 static rt_size_t uartWrite(struct rt_device *dev, rt_off_t pos, const void *buffer, rt_size_t size)
 {
 	struct UARTDevice * pUart = (struct UARTDevice *) dev;
-	rt_size_t length = rt_ringbuffer_put(&pUart->pTxBuffer, buffer, size);
-	if (pUart->onTxBufferChange != RT_NULL)
+
+	rt_size_t length = 0;
+
+	if (rt_interrupt_get_nest() > 0)
 	{
-		pUart->onTxBufferChange(pUart);
+		length += rt_ringbuffer_put(&pUart->pTxBuffer, buffer, size);
 	}
+	else
+	{
+		while (rt_mutex_take(&pUart->writeLock, RT_TICK_MAX) != RT_EOK)
+		{
+		}
+		length += rt_ringbuffer_put(&pUart->pTxBuffer, (const rt_uint8_t *) buffer + length, size - length);
+		if (length < size)
+		{
+			rt_uint32_t charCount =
+					(size - length) < (pUart->pTxBuffer.buffer_size / 2) ?
+							(size - length) : (pUart->pTxBuffer.buffer_size / 2);
+			rt_uint32_t bitPerChar = (pUart->config.USART_Parity == USART_Parity_No ? 0 : 1) + 2
+					+ (pUart->config.USART_WordLength == USART_WordLength_8b ? 8 : 9);
+			rt_uint32_t delayTicks = uartCalcDelayTicks(charCount, pUart->config.USART_BaudRate, bitPerChar);
+			while (length < size)
+			{
+				rt_thread_delay(delayTicks);
+				length += rt_ringbuffer_put(&pUart->pTxBuffer, (const rt_uint8_t *) buffer + length, size - length);
+			}
+		}
+		rt_mutex_release(&pUart->writeLock);
+	}
+
 	USART_ITConfig(pUart->USARTx, USART_IT_TXE, ENABLE);
 	return (length);
 }
@@ -230,32 +243,16 @@ static rt_err_t uartControl(struct rt_device *dev, rt_uint8_t cmd, void *args)
 	case CONFIGURE:
 	{
 		struct UARTControlArgConfigure * pArg = args;
+		struct UARTControlArgConfigure * pConfig = &pUart->config;
 		USART_InitTypeDef USART_InitStructure;
-		USART_InitStructure.USART_BaudRate = pArg->USART_BaudRate;
-		USART_InitStructure.USART_WordLength = pArg->USART_WordLength;
-		USART_InitStructure.USART_StopBits = pArg->USART_StopBits;
-		USART_InitStructure.USART_Parity = pArg->USART_Parity;
-		USART_InitStructure.USART_HardwareFlowControl = pArg->USART_HardwareFlowControl;
+		USART_InitStructure.USART_BaudRate = pConfig->USART_BaudRate = pArg->USART_BaudRate;
+		USART_InitStructure.USART_WordLength = pConfig->USART_WordLength = pArg->USART_WordLength;
+		USART_InitStructure.USART_StopBits = pConfig->USART_StopBits = pArg->USART_StopBits;
+		USART_InitStructure.USART_Parity = pConfig->USART_Parity = pArg->USART_Parity;
+		USART_InitStructure.USART_HardwareFlowControl = pConfig->USART_HardwareFlowControl =
+				pArg->USART_HardwareFlowControl;
 		USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
 		USART_Init(pUart->USARTx, &USART_InitStructure);
-		break;
-	}
-	case SET_ON_RX_BUFFER_CHANGE:
-	{
-		pUart->onRxBufferChange = (void (*)(struct UARTDevice *)) args;
-		if (pUart->onRxBufferChange != RT_NULL)
-		{
-			pUart->onRxBufferChange(pUart);
-		}
-		break;
-	}
-	case SET_ON_TX_BUFFER_CHANGE:
-	{
-		pUart->onTxBufferChange = (void (*)(struct UARTDevice *)) args;
-		if (pUart->onTxBufferChange != RT_NULL)
-		{
-			pUart->onTxBufferChange(pUart);
-		}
 		break;
 	}
 	}
@@ -287,10 +284,10 @@ static void uartISR(struct UARTDevice * pUart)
 
 	if (USART_GetFlagStatus(pUart->USARTx, USART_FLAG_RXNE ) == SET)
 	{
-		rt_ringbuffer_putchar(&pUart->pRxBuffer, USART_ReceiveData(pUart->USARTx) & 0xff);
-		if (pUart->onRxBufferChange != RT_NULL)
+		rt_size_t length = rt_ringbuffer_putchar(&pUart->pRxBuffer, USART_ReceiveData(pUart->USARTx) & 0xff);
+		if (pUart->parent.rx_indicate != RT_NULL && length)
 		{
-			pUart->onRxBufferChange(pUart);
+			pUart->parent.rx_indicate(&pUart->parent, length);
 		}
 	}
 
@@ -298,9 +295,9 @@ static void uartISR(struct UARTDevice * pUart)
 	{
 		rt_uint8_t ch;
 		rt_size_t length = rt_ringbuffer_getchar(&pUart->pTxBuffer, &ch);
-		if (pUart->onTxBufferChange != RT_NULL)
+		if (pUart->parent.tx_complete != RT_NULL && length)
 		{
-			pUart->onTxBufferChange(pUart);
+			pUart->parent.tx_complete(&pUart->parent, &ch);
 		}
 		if (length)
 		{
@@ -334,6 +331,11 @@ void rt_hw_usart_init()
 			uart1Init);
 
 	/* register uart2 */
+}
+
+rt_uint32_t uartCalcDelayTicks(rt_uint32_t charCount, rt_uint32_t baudRate, rt_uint32_t bitPerChar)
+{
+	return ((rt_uint32_t) (charCount * bitPerChar * RT_TICK_PER_SECOND / baudRate) + 1);
 }
 
 void USART1_IRQHandler()

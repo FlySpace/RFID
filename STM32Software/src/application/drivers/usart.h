@@ -24,21 +24,6 @@
 #define UART2_TX_BUFFER_SIZE 128
 #define UART2_RX_BUFFER_SIZE 128
 
-struct UARTDevice
-{
-	struct rt_device parent;
-	USART_TypeDef * USARTx;
-	struct rt_ringbuffer pTxBuffer;
-	struct rt_ringbuffer pRxBuffer;
-	void (*onTxBufferChange)(struct UARTDevice * pUART);
-	void (*onRxBufferChange)(struct UARTDevice * pUART);
-};
-
-enum UARTControlCmd
-{
-	CONFIGURE, SET_ON_TX_BUFFER_CHANGE, SET_ON_RX_BUFFER_CHANGE
-};
-
 struct UARTControlArgConfigure
 {
 	uint32_t USART_BaudRate;
@@ -48,7 +33,23 @@ struct UARTControlArgConfigure
 	uint16_t USART_HardwareFlowControl;
 };
 
+struct UARTDevice
+{
+	struct rt_device parent;
+	USART_TypeDef * USARTx;
+	struct rt_ringbuffer pTxBuffer;
+	struct rt_ringbuffer pRxBuffer;
+	struct UARTControlArgConfigure config;
+	struct rt_mutex writeLock;
+};
+
+enum UARTControlCmd
+{
+	CONFIGURE, SET_ON_TX_BUFFER_CHANGE, SET_ON_RX_BUFFER_CHANGE
+};
+
 unsigned int crc16(unsigned char *ptr, unsigned char count);
 void rt_hw_usart_init();
+rt_uint32_t uartCalcDelayTicks(rt_uint32_t charCount, rt_uint32_t baudRate, rt_uint32_t bitPerChar);
 
 #endif

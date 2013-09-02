@@ -15,8 +15,8 @@
 
 #include "usart.h"
 #include "rthw.h"
-#include "rtdevice.h"
 #include "stm32f10x.h"
+#include "ringbuffer.h"
 
 static struct UARTDevice uart1;
 static rt_uint8_t UART1RxBuffer[UART1_RX_BUFFER_SIZE];
@@ -147,8 +147,8 @@ static rt_err_t uart1Init(rt_device_t dev)
 
 	uart1.USARTx = USART1;
 	rt_mutex_init(&uart1.writeLock, "", RT_IPC_FLAG_PRIO);
-	rt_ringbuffer_init(&uart1.pRxBuffer, UART1RxBuffer, UART1_RX_BUFFER_SIZE);
-	rt_ringbuffer_init(&uart1.pTxBuffer, UART1TxBuffer, UART1_TX_BUFFER_SIZE);
+	ringBufferInit(&uart1.pRxBuffer, UART1RxBuffer, UART1_RX_BUFFER_SIZE_BIT_COUNT);
+	ringBufferInit(&uart1.pTxBuffer, UART1TxBuffer, UART1_TX_BUFFER_SIZE_BIT_COUNT);
 	struct UARTControlArgConfigure config;
 	config.USART_BaudRate = 9600;
 	config.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
@@ -192,7 +192,7 @@ static rt_err_t uartClose(struct rt_device *dev)
 static rt_size_t uartRead(struct rt_device *dev, rt_off_t pos, void *buffer, rt_size_t size)
 {
 	struct UARTDevice * pUart = (struct UARTDevice *) dev;
-	rt_size_t length = rt_ringbuffer_get(&pUart->pRxBuffer, buffer, size);
+	rt_size_t length = ringBufferGet(&pUart->pRxBuffer, buffer, size);
 	return (length);
 }
 
@@ -204,26 +204,26 @@ static rt_size_t uartWrite(struct rt_device *dev, rt_off_t pos, const void *buff
 
 	if (rt_interrupt_get_nest() > 0 || rt_thread_self() == RT_NULL)
 	{
-		length += rt_ringbuffer_put(&pUart->pTxBuffer, buffer, size);
+		length += ringBufferPut(&pUart->pTxBuffer, buffer, size);
 	}
 	else
 	{
 		while (rt_mutex_take(&pUart->writeLock, RT_TICK_MAX) != RT_EOK)
 		{
 		}
-		length += rt_ringbuffer_put(&pUart->pTxBuffer, (const rt_uint8_t *) buffer + length, size - length);
+		length += ringBufferPut(&pUart->pTxBuffer, (const rt_uint8_t *) buffer + length, size - length);
 		if (length < size)
 		{
 			rt_uint32_t charCount =
-					(size - length) < (pUart->pTxBuffer.buffer_size / 2) ?
-							(size - length) : (pUart->pTxBuffer.buffer_size / 2);
+					(size - length) < (pUart->pTxBuffer._indexMSBMask / 2) ?
+							(size - length) : (pUart->pTxBuffer._indexMSBMask / 2);
 			rt_uint32_t bitPerChar = (pUart->config.USART_Parity == USART_Parity_No ? 0 : 1) + 2
 					+ (pUart->config.USART_WordLength == USART_WordLength_8b ? 8 : 9);
 			rt_uint32_t delayTicks = uartCalcDelayTicks(charCount, pUart->config.USART_BaudRate, bitPerChar);
 			while (length < size)
 			{
 				rt_thread_delay(delayTicks);
-				length += rt_ringbuffer_put(&pUart->pTxBuffer, (const rt_uint8_t *) buffer + length, size - length);
+				length += ringBufferPut(&pUart->pTxBuffer, (const rt_uint8_t *) buffer + length, size - length);
 			}
 		}
 		rt_mutex_release(&pUart->writeLock);
@@ -284,7 +284,8 @@ static void uartISR(struct UARTDevice * pUart)
 
 	if (USART_GetFlagStatus(pUart->USARTx, USART_FLAG_RXNE ) == SET)
 	{
-		rt_size_t length = rt_ringbuffer_putchar(&pUart->pRxBuffer, USART_ReceiveData(pUart->USARTx) & 0xff);
+		unsigned char ch = USART_ReceiveData(pUart->USARTx) & 0xff;
+		rt_size_t length = ringBufferPut(&pUart->pRxBuffer, &ch, 1);
 		if (pUart->parent.rx_indicate != RT_NULL && length)
 		{
 			pUart->parent.rx_indicate(&pUart->parent, length);
@@ -294,7 +295,7 @@ static void uartISR(struct UARTDevice * pUart)
 	if (USART_GetITStatus(pUart->USARTx, USART_IT_TXE ) == SET)
 	{
 		rt_uint8_t ch;
-		rt_size_t length = rt_ringbuffer_getchar(&pUart->pTxBuffer, &ch);
+		rt_size_t length = ringBufferGet(&pUart->pTxBuffer, &ch, 1);
 		if (pUart->parent.tx_complete != RT_NULL && length)
 		{
 			pUart->parent.tx_complete(&pUart->parent, &ch);

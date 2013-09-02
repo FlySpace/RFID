@@ -17,12 +17,12 @@
 
 #include "stm32f10x.h"
 #include "rtthread.h"
-#include "rtdevice.h"
+#include "ringbuffer.h"
 
-#define UART1_TX_BUFFER_SIZE 512
-#define UART1_RX_BUFFER_SIZE 128
-#define UART2_TX_BUFFER_SIZE 128
-#define UART2_RX_BUFFER_SIZE 128
+#define UART1_TX_BUFFER_SIZE_BIT_COUNT 9
+#define UART1_RX_BUFFER_SIZE_BIT_COUNT 7
+#define UART2_TX_BUFFER_SIZE_BIT_COUNT 7
+#define UART2_RX_BUFFER_SIZE_BIT_COUNT 7
 
 struct UARTControlArgConfigure
 {
@@ -37,8 +37,8 @@ struct UARTDevice
 {
 	struct rt_device parent;
 	USART_TypeDef * USARTx;
-	struct rt_ringbuffer pTxBuffer;
-	struct rt_ringbuffer pRxBuffer;
+	struct RingBuffer pTxBuffer;
+	struct RingBuffer pRxBuffer;
 	struct UARTControlArgConfigure config;
 	struct rt_mutex writeLock;
 };

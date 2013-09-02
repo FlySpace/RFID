@@ -204,14 +204,14 @@ static rt_size_t uartWrite(struct rt_device *dev, rt_off_t pos, const void *buff
 
 	if (rt_interrupt_get_nest() > 0 || rt_thread_self() == RT_NULL)
 	{
-		length += ringBufferPut(&pUart->pTxBuffer, buffer, size);
+		length += ringBufferPut(&pUart->pTxBuffer, (unsigned char *) buffer, size);
 	}
 	else
 	{
 		while (rt_mutex_take(&pUart->writeLock, RT_TICK_MAX) != RT_EOK)
 		{
 		}
-		length += ringBufferPut(&pUart->pTxBuffer, (const rt_uint8_t *) buffer + length, size - length);
+		length += ringBufferPut(&pUart->pTxBuffer, (unsigned char *) buffer + length, size - length);
 		if (length < size)
 		{
 			rt_uint32_t charCount =
@@ -223,7 +223,7 @@ static rt_size_t uartWrite(struct rt_device *dev, rt_off_t pos, const void *buff
 			while (length < size)
 			{
 				rt_thread_delay(delayTicks);
-				length += ringBufferPut(&pUart->pTxBuffer, (const rt_uint8_t *) buffer + length, size - length);
+				length += ringBufferPut(&pUart->pTxBuffer, (unsigned char *) buffer + length, size - length);
 			}
 		}
 		rt_mutex_release(&pUart->writeLock);

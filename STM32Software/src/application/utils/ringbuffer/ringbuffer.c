@@ -6,6 +6,7 @@
  */
 
 #include "ringbuffer.h"
+#include "string.h"
 
 void ringBufferInit(struct RingBuffer * ringBuffer, unsigned char * poolPtr, unsigned char sizeBitCount)
 {
@@ -19,7 +20,7 @@ void ringBufferInit(struct RingBuffer * ringBuffer, unsigned char * poolPtr, uns
 	ringBuffer->_indexSizeMask = ((RING_BUFFER_INDEX_TYPE) 1 << sizeBitCount) - (RING_BUFFER_INDEX_TYPE) 1;
 }
 
-RING_BUFFER_INDEX_TYPE ringBufferPut(struct RingBuffer * ringBuffer, const unsigned char * dataPtr,
+RING_BUFFER_INDEX_TYPE ringBufferPut(struct RingBuffer * ringBuffer, unsigned char * dataPtr,
 		RING_BUFFER_INDEX_TYPE length)
 {
 	RING_BUFFER_INDEX_TYPE emptySize = ringBufferEmptySize(ringBuffer);

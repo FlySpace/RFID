@@ -7,7 +7,6 @@
 
 #include "rtthread.h"
 #include "threads.h"
-#include "rtdevice.h"
 
 void thread_card(void * param)
 {

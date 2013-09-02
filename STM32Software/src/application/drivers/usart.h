@@ -24,6 +24,11 @@
 #define UART2_TX_BUFFER_SIZE_BIT_COUNT 7
 #define UART2_RX_BUFFER_SIZE_BIT_COUNT 7
 
+#define UART1_TX_BUFFER_SIZE ((unsigned int)1 << UART1_TX_BUFFER_SIZE_BIT_COUNT)
+#define UART1_RX_BUFFER_SIZE ((unsigned int)1 << UART1_RX_BUFFER_SIZE_BIT_COUNT)
+#define UART2_TX_BUFFER_SIZE ((unsigned int)1 << UART2_TX_BUFFER_SIZE_BIT_COUNT)
+#define UART2_RX_BUFFER_SIZE ((unsigned int)1 << UART2_RX_BUFFER_SIZE_BIT_COUNT)
+
 struct UARTControlArgConfigure
 {
 	uint32_t USART_BaudRate;

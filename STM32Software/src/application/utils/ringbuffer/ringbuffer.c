@@ -21,7 +21,7 @@ void ringBufferInit(struct RingBuffer * ringBuffer, unsigned char * poolPtr, uns
 }
 
 RING_BUFFER_INDEX_TYPE ringBufferPut(struct RingBuffer * ringBuffer, unsigned char * dataPtr,
-		RING_BUFFER_INDEX_TYPE length)
+RING_BUFFER_INDEX_TYPE length)
 {
 	RING_BUFFER_INDEX_TYPE emptySize = ringBufferEmptySize(ringBuffer);
 	if (length > emptySize)
@@ -30,19 +30,20 @@ RING_BUFFER_INDEX_TYPE ringBufferPut(struct RingBuffer * ringBuffer, unsigned ch
 	}
 	if ((ringBuffer->readIndex ^ ringBuffer->writeIndex) & ringBuffer->_indexMSBMask)
 	{
-		memcpy(ringBuffer->pool + ringBuffer->writeIndex, dataPtr, length);
+		memcpy(ringBuffer->pool + (ringBuffer->writeIndex & ringBuffer->_indexSizeMask), dataPtr, length);
 	}
 	else
 	{
-		RING_BUFFER_INDEX_TYPE length1 = (-ringBuffer->writeIndex) & ringBuffer->_indexSizeMask;
+		RING_BUFFER_INDEX_TYPE length1 = ringBuffer->_indexMSBMask
+				- (ringBuffer->writeIndex & ringBuffer->_indexSizeMask);
 		if (length > length1)
 		{
-			memcpy(ringBuffer->pool + ringBuffer->writeIndex, dataPtr, length1);
+			memcpy(ringBuffer->pool + (ringBuffer->writeIndex & ringBuffer->_indexSizeMask), dataPtr, length1);
 			memcpy(ringBuffer->pool, dataPtr + length1, length - length1);
 		}
 		else
 		{
-			memcpy(ringBuffer->pool + ringBuffer->writeIndex, dataPtr, length);
+			memcpy(ringBuffer->pool + (ringBuffer->writeIndex & ringBuffer->_indexSizeMask), dataPtr, length);
 		}
 	}
 	ringBuffer->writeIndex = (ringBuffer->writeIndex + length) & ringBuffer->_indexMask;
@@ -50,7 +51,7 @@ RING_BUFFER_INDEX_TYPE ringBufferPut(struct RingBuffer * ringBuffer, unsigned ch
 }
 
 RING_BUFFER_INDEX_TYPE ringBufferGet(struct RingBuffer * ringBuffer, unsigned char * dataPtr,
-		RING_BUFFER_INDEX_TYPE length)
+RING_BUFFER_INDEX_TYPE length)
 {
 	RING_BUFFER_INDEX_TYPE dataSize = ringBufferDataSize(ringBuffer);
 	if (length > dataSize)
@@ -59,20 +60,21 @@ RING_BUFFER_INDEX_TYPE ringBufferGet(struct RingBuffer * ringBuffer, unsigned ch
 	}
 	if ((ringBuffer->readIndex ^ ringBuffer->writeIndex) & ringBuffer->_indexMSBMask)
 	{
-		RING_BUFFER_INDEX_TYPE length1 = (-ringBuffer->readIndex) & ringBuffer->_indexSizeMask;
+		RING_BUFFER_INDEX_TYPE length1 = ringBuffer->_indexMSBMask
+				- (ringBuffer->readIndex & ringBuffer->_indexSizeMask);
 		if (length > length1)
 		{
-			memcpy(dataPtr, ringBuffer->pool + ringBuffer->readIndex, length1);
+			memcpy(dataPtr, ringBuffer->pool + (ringBuffer->readIndex & ringBuffer->_indexSizeMask), length1);
 			memcpy(dataPtr + length1, ringBuffer->pool, length - length1);
 		}
 		else
 		{
-			memcpy(dataPtr, ringBuffer->pool + ringBuffer->readIndex, length);
+			memcpy(dataPtr, ringBuffer->pool + (ringBuffer->readIndex & ringBuffer->_indexSizeMask), length);
 		}
 	}
 	else
 	{
-		memcpy(dataPtr, ringBuffer->pool + ringBuffer->readIndex, length);
+		memcpy(dataPtr, ringBuffer->pool + (ringBuffer->readIndex & ringBuffer->_indexSizeMask), length);
 	}
 	ringBuffer->readIndex = (ringBuffer->readIndex + length) & ringBuffer->_indexMask;
 	return (length);

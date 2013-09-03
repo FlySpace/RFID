@@ -27,12 +27,15 @@ struct RingBuffer
 };
 
 #define ringBufferDataSize(ringBuffer) ((ringBuffer->writeIndex - ringBuffer->readIndex) & ringBuffer->_indexMask)
-#define ringBufferEmptySize(ringBuffer) ((ringBuffer->writeIndex - ringBuffer->readIndex) & ringBuffer->_indexMask)
+#define ringBufferEmptySize(ringBuffer) (ringBuffer->_indexMSBMask - ringBufferDataSize(ringBuffer))
 
-void ringBufferInit(struct RingBuffer * ringBuffer, unsigned char * poolPtr, unsigned char sizeBitCount);
-RING_BUFFER_INDEX_TYPE ringBufferPut(struct RingBuffer * ringBuffer, unsigned char * dataPtr,
+void ringBufferInit(struct RingBuffer * ringBuffer, unsigned char * poolPtr,
+		unsigned char sizeBitCount);
+RING_BUFFER_INDEX_TYPE ringBufferPut(struct RingBuffer * ringBuffer,
+		unsigned char * dataPtr,
 		RING_BUFFER_INDEX_TYPE length);
-RING_BUFFER_INDEX_TYPE ringBufferGet(struct RingBuffer * ringBuffer, unsigned char * dataPtr,
+RING_BUFFER_INDEX_TYPE ringBufferGet(struct RingBuffer * ringBuffer,
+		unsigned char * dataPtr,
 		RING_BUFFER_INDEX_TYPE length);
 
 #endif /* RINGBUFFER_H_ */

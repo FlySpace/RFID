@@ -21,9 +21,9 @@
 static struct UARTDevice uart1;
 static rt_uint8_t UART1RxBuffer[UART1_RX_BUFFER_SIZE];
 static rt_uint8_t UART1TxBuffer[UART1_TX_BUFFER_SIZE];
-//static struct UARTDevice uart2;
-//static rt_uint8_t UART2RxBuffer[UART2_RX_BUFFER_SIZE];
-//static rt_uint8_t UART2TxBuffer[UART2_TX_BUFFER_SIZE];
+static struct UARTDevice uart2;
+static rt_uint8_t UART2RxBuffer[UART2_RX_BUFFER_SIZE];
+static rt_uint8_t UART2TxBuffer[UART2_TX_BUFFER_SIZE];
 
 /* USART1_REMAP = 0 */
 #define UART1_GPIO_TX		GPIO_Pin_9
@@ -156,6 +156,28 @@ static rt_err_t uart1Init(rt_device_t dev)
 	config.USART_StopBits = USART_StopBits_1;
 	config.USART_WordLength = USART_WordLength_8b;
 	rt_device_control(&uart1.parent, CONFIGURE, &config);
+
+	dev->flag |= RT_DEVICE_FLAG_ACTIVATED;
+
+	rt_hw_interrupt_enable(l);
+	return (RT_EOK);
+}
+
+static rt_err_t uart2Init(rt_device_t dev)
+{
+	rt_base_t l = rt_hw_interrupt_disable();
+
+	uart2.USARTx = USART2;
+	rt_mutex_init(&uart2.writeLock, "", RT_IPC_FLAG_PRIO);
+	ringBufferInit(&uart2.pRxBuffer, UART2RxBuffer, UART2_RX_BUFFER_SIZE_BIT_COUNT);
+	ringBufferInit(&uart2.pTxBuffer, UART2TxBuffer, UART2_TX_BUFFER_SIZE_BIT_COUNT);
+	struct UARTControlArgConfigure config;
+	config.USART_BaudRate = 9600;
+	config.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+	config.USART_Parity = USART_Parity_No;
+	config.USART_StopBits = USART_StopBits_1;
+	config.USART_WordLength = USART_WordLength_8b;
+	rt_device_control(&uart2.parent, CONFIGURE, &config);
 
 	dev->flag |= RT_DEVICE_FLAG_ACTIVATED;
 
@@ -331,7 +353,10 @@ void rt_hw_usart_init()
 			RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX | RT_DEVICE_FLAG_INT_TX | RT_DEVICE_FLAG_STREAM, RT_NULL,
 			uart1Init);
 
-	/* register uart2 */
+	uartRegister(&uart2, "uart2",
+			RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX | RT_DEVICE_FLAG_INT_TX | RT_DEVICE_FLAG_STREAM, RT_NULL,
+			uart2Init);
+
 }
 
 rt_uint32_t uartCalcDelayTicks(rt_uint32_t charCount, rt_uint32_t baudRate, rt_uint32_t bitPerChar)

@@ -9,6 +9,7 @@
 #include "threads.h"
 #include "ringbuffer.h"
 #include "finsh.h"
+#include "stm32f10x.h"
 
 #define POOL_SIZE_BIT_COUNT 8
 struct RingBuffer cardData;
@@ -16,6 +17,15 @@ static unsigned char pool[1 << POOL_SIZE_BIT_COUNT];
 
 void thread_card_control(void * param)
 {
+	rt_device_t uart2 = rt_device_find("uart2");
+	struct UARTControlArgConfigure config;
+	config.USART_BaudRate = 115200;
+	config.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+	config.USART_Parity = USART_Parity_No;
+	config.USART_StopBits = USART_StopBits_1;
+	config.USART_WordLength = USART_WordLength_8b;
+	rt_device_control(uart2, CONFIGURE, &config);
+
 	ringBufferInit(&cardData, pool, POOL_SIZE_BIT_COUNT);
 	//TODO 初始化事件
 	rt_thread_t card_thread = rt_thread_create(THREAD_CARD_NAME, thread_card, RT_NULL, 128, 5, 10);

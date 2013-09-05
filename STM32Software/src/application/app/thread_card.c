@@ -38,7 +38,7 @@ void thread_card(void * param)
 	rt_device_t uart2 = &pUart->parent;
 	rt_size_t packetLen;
 	rt_uint8_t * tempBuffer;
-
+	rt_device_open(uart2, RT_DEVICE_OFLAG_RDWR);
 	//
 	tempBuffer = rt_malloc(20);
 	do
@@ -68,6 +68,7 @@ void thread_card(void * param)
 	rt_device_read(uart2, 0, tempBuffer, packetLen);
 	rt_free(tempBuffer);
 
+	rt_device_close(uart2);
 }
 
 rt_err_t matchArray(struct RingBuffer * ringBuffer, unsigned char * array, rt_size_t length, unsigned char * resultPtr)

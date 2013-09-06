@@ -150,7 +150,7 @@ static rt_err_t uart1Init(rt_device_t dev)
 	ringBufferInit(&uart1.pRxBuffer, UART1RxBuffer, UART1_RX_BUFFER_SIZE_BIT_COUNT);
 	ringBufferInit(&uart1.pTxBuffer, UART1TxBuffer, UART1_TX_BUFFER_SIZE_BIT_COUNT);
 	struct UARTControlArgConfigure config;
-	config.USART_BaudRate = 9600;
+	config.USART_BaudRate = 115200;
 	config.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
 	config.USART_Parity = USART_Parity_No;
 	config.USART_StopBits = USART_StopBits_1;
@@ -172,7 +172,7 @@ static rt_err_t uart2Init(rt_device_t dev)
 	ringBufferInit(&uart2.pRxBuffer, UART2RxBuffer, UART2_RX_BUFFER_SIZE_BIT_COUNT);
 	ringBufferInit(&uart2.pTxBuffer, UART2TxBuffer, UART2_TX_BUFFER_SIZE_BIT_COUNT);
 	struct UARTControlArgConfigure config;
-	config.USART_BaudRate = 9600;
+	config.USART_BaudRate = 115200;
 	config.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
 	config.USART_Parity = USART_Parity_No;
 	config.USART_StopBits = USART_StopBits_1;

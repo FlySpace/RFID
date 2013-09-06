@@ -131,7 +131,7 @@ rt_size_t findPacket(struct UARTDevice * pUart, rt_uint8_t messageType, rt_uint8
 		//PayloadLength
 		waitRingBufferData(&tempRingBuffer, pUart, 2, 5);
 		ringBufferGet(&tempRingBuffer, temp, 2);
-		rt_uint16_t payloadLen = temp[0] << 8 + temp[1];
+		rt_uint16_t payloadLen = (temp[0] << 8) + temp[1];
 		//Payload-EndMask-CRC16
 		waitRingBufferData(&tempRingBuffer, pUart, payloadLen + 3, 5);
 		return (3 + 2 + payloadLen + 3);

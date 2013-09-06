@@ -370,3 +370,10 @@ void USART1_IRQHandler()
 	uartISR(&uart1);
 	rt_interrupt_leave();
 }
+
+void USART2_IRQHandler()
+{
+	rt_interrupt_enter();
+	uartISR(&uart2);
+	rt_interrupt_leave();
+}

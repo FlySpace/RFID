@@ -23,6 +23,11 @@
 
 /* Includes ------------------------------------------------------------------*/
 //#include "stm32f10x_it.h"
+#include "stm32f10x.h"
+extern uint8_t a[];
+extern __IO uint16_t BTTxCnt1;
+extern uint8_t *BTTXS;
+extern __IO uint16_t BTTxLen;
 
 /** @addtogroup STM32F10x_StdPeriph_Template
   * @{
@@ -142,6 +147,59 @@ void DebugMon_Handler(void)
 /*  available peripheral interrupt handler's name please refer to the startup */
 /*  file (startup_stm32f10x_xx.s).                                            */
 /******************************************************************************/
+
+/*******************************************************************************
+* Function Name  : USART1_IRQHandler
+* Description    : This function handles USART1 global interrupt request.
+* Input          : None
+* Output         : None
+* Return         : None
+*******************************************************************************/
+void USART1_IRQHandler(void)
+{
+//    extern struct rt_device uart1_device;
+//	extern void rt_hw_serial_isr(struct rt_device *device);
+//
+//    /* enter interrupt */
+//    rt_interrupt_enter();
+//
+//    rt_hw_serial_isr(&uart1_device);
+//
+//    /* leave interrupt */
+//    rt_interrupt_leave();
+	if(USART_GetITStatus(USART1, USART_IT_TXE) != RESET)
+	{
+		if(BTTxCnt1<BTTxLen)
+		{ USART_SendData(USART1,BTTXS[BTTxCnt1++]);}
+		else //发送完成后关闭TXE中断
+		{ USART_ITConfig(USART1,USART_IT_TXE,DISABLE);}
+	}
+
+}
+
+/*******************************************************************************
+* Function Name  : USART2_IRQHandler
+* Description    : This function handles USART2 global interrupt request.
+* Input          : None
+* Output         : None
+* Return         : None
+*******************************************************************************/
+void USART2_IRQHandler(void)
+{
+//    extern struct rt_device uart2_device;
+//	extern void rt_hw_serial_isr(struct rt_device *device);
+//
+//    /* enter interrupt */
+//    rt_interrupt_enter();
+//
+//    rt_hw_serial_isr(&uart2_device);
+//
+//    /* leave interrupt */
+//    rt_interrupt_leave();
+}
+
+
+
 
 
 /**

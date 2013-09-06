@@ -6,6 +6,7 @@
 #include "usart.h"
 #include "shell.h"
 
+
 #pragma section="RT_HEAP"
 
 static void rt_thread_idle_hook();

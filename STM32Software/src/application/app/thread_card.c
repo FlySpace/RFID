@@ -46,8 +46,6 @@ void thread_card(void * param)
 	//
 	rt_device_write(uart2, 0, cmdReset, sizeof(cmdReset));
 	rt_thread_delay(1000);
-	rt_device_write(uart2, 0, cmdReset, sizeof(cmdReset));
-	rt_thread_delay(1000);
 	tempBuffer = rt_malloc(20);
 	do
 	{

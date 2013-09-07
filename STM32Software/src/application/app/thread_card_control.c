@@ -14,18 +14,17 @@
 #define POOL_SIZE_BIT_COUNT 8
 struct RingBuffer cardData;
 static unsigned char pool[1 << POOL_SIZE_BIT_COUNT];
-FINSH_VAR_EXPORT(pool, finsh_type_charp, Card Pool)
 
 void thread_card_control(void * param)
 {
-//	rt_device_t uart2 = rt_device_find("uart2");
-//	struct UARTControlArgConfigure config;
-//	config.USART_BaudRate = 115200;
-//	config.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-//	config.USART_Parity = USART_Parity_No;
-//	config.USART_StopBits = USART_StopBits_1;
-//	config.USART_WordLength = USART_WordLength_8b;
-//	rt_device_control(uart2, CONFIGURE, &config);
+	rt_device_t uart2 = rt_device_find("uart2");
+	struct UARTControlArgConfigure config;
+	config.USART_BaudRate = 115200;
+	config.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+	config.USART_Parity = USART_Parity_No;
+	config.USART_StopBits = USART_StopBits_1;
+	config.USART_WordLength = USART_WordLength_8b;
+	rt_device_control(uart2, CONFIGURE, &config);
 
 	ringBufferInit(&cardData, pool, POOL_SIZE_BIT_COUNT);
 	//TODO 初始化事件
@@ -45,12 +44,12 @@ void thread_card_control(void * param)
 //	}
 }
 
-rt_err_t lookMem(unsigned char * p, unsigned int len)
+rt_err_t look(unsigned char * p, unsigned int len)
 {
 	for (int i = 0; i < len; i++)
 	{
-		rt_kprintf("%#x ", p[i]);
+		rt_kprintf("%.2X ", p[i]);
 	}
 	return (RT_EOK);
 }
-FINSH_FUNCTION_EXPORT(lookMem, lookMem)
+FINSH_FUNCTION_EXPORT(look, rt_err_t look(unsigned char * p, unsigned int len))

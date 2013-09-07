@@ -11,6 +11,9 @@
 #include "ringbuffer.h"
 #include "usart.h"
 
+static const rt_uint8_t cmdReset[] =
+{ 0xBB, 0x00, 0x08, 0x00, 0x00, 0x7E, 0x0B, 0x96 };
+
 static const rt_uint8_t cmdStartAutoRead2[] =
 { 0xBB, 0x00, 0x36, 0x00, 0x05, 0x02, 0x01, 0x00, 0x00, 0x00, 0x7E, 0x88, 0x5C };
 
@@ -39,7 +42,12 @@ void thread_card(void * param)
 	rt_size_t packetLen;
 	rt_uint8_t * tempBuffer;
 	rt_device_open(uart2, RT_DEVICE_OFLAG_RDWR);
+
 	//
+	rt_device_write(uart2, 0, cmdReset, sizeof(cmdReset));
+	rt_thread_delay(1000);
+	rt_device_write(uart2, 0, cmdReset, sizeof(cmdReset));
+	rt_thread_delay(1000);
 	tempBuffer = rt_malloc(20);
 	do
 	{

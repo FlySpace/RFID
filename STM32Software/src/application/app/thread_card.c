@@ -193,7 +193,7 @@ void mallocAfterFree(rt_size_t size, uint8_t ** mem, uint8_t * memFlag)
 	if (*memFlag)
 	{
 		*memFlag = 0;
-		rt_free(mem);
+		rt_free(*mem);
 	}
 	*mem = rt_malloc(size);
 	if (*mem != RT_NULL)

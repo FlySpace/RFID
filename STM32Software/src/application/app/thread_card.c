@@ -10,6 +10,7 @@
 #include "rthw.h"
 #include "ringbuffer.h"
 #include "usart.h"
+#include "string.h"
 
 static const rt_uint8_t cmdReset[] =
 { 0xBB, 0x00, 0x08, 0x00, 0x00, 0x7E, 0x0B, 0x96 };
@@ -41,9 +42,11 @@ static struct rt_timer rspTimeOutTimer;
 static void rspTimeOut(void * param);
 rt_err_t findPacket(rt_size_t * packetLen, struct UARTDevice * pUart, rt_uint8_t messageType, rt_uint8_t code,
 		rt_tick_t timeOut);
-void mallocAfterFree(rt_size_t size, void ** m, uint8_t * memFlag);
+void mallocAfterFree(rt_size_t size, uint8_t ** mem, uint8_t * memFlag);
 void * mlc(rt_size_t size, uint8_t * memFlag);
-rt_err_t fr(void * m, uint8_t * memFlag);
+rt_err_t fr(void * mem, uint8_t * memFlag);
+uint16_t mallocReadAreaCmd(uint8_t ** buffer, uint8_t * memFlag, uint32_t ap, uint8_t * epc, uint16_t epcLen,
+		uint8_t mb, uint16_t sa, uint16_t dl);
 
 static rt_uint8_t * tempBuffer;
 static uint8_t tempBufferFlag = 0;
@@ -59,7 +62,7 @@ static rt_uint8_t * userArea;
 static uint8_t userAreaFlag = 0;
 void thread_card(void * param)
 {
-	rt_timer_init(rspTimeOutTimer, "rspt", rspTimeOut, RT_NULL, 500, RT_TIMER_FLAG_ONE_SHOT);
+	rt_timer_init(&rspTimeOutTimer, "rspt", rspTimeOut, RT_NULL, 500, RT_TIMER_FLAG_ONE_SHOT);
 	rt_device_t uart2 = rt_device_find("uart2");
 	struct UARTDevice * pUart = (struct UARTDevice *) uart2;
 
@@ -170,11 +173,11 @@ void thread_card(void * param)
 		rt_enter_critical();
 		if (ringBufferEmptySize(&cardData) >= sizeof(header) + header.reserved + header.epc + header.tid + header.user)
 		{
-			ringBufferPut(&cardData, &header, sizeof(header));
-			ringBufferPut(&cardData, reservedArea, header.reserved);
-			ringBufferPut(&cardData, epcArea, header.epc);
-			ringBufferPut(&cardData, tidArea, header.tid);
-			ringBufferPut(&cardData, userArea, header.user);
+			ringBufferPut(&cardData, (uint8_t *) &header, sizeof(header));
+			ringBufferPut(&cardData, (uint8_t *) reservedArea, header.reserved);
+			ringBufferPut(&cardData, (uint8_t *) epcArea, header.epc);
+			ringBufferPut(&cardData, (uint8_t *) tidArea, header.tid);
+			ringBufferPut(&cardData, (uint8_t *) userArea, header.user);
 		}
 		rt_exit_critical();
 	}
@@ -185,15 +188,15 @@ static void rspTimeOut(void * param)
 	isRspTimeOut = 1;
 }
 
-void mallocAfterFree(rt_size_t size, void ** m, uint8_t * memFlag)
+void mallocAfterFree(rt_size_t size, uint8_t ** mem, uint8_t * memFlag)
 {
 	if (*memFlag)
 	{
 		*memFlag = 0;
-		rt_free(m);
+		rt_free(mem);
 	}
-	*m = rt_malloc(size);
-	if (*m != RT_NULL)
+	*mem = rt_malloc(size);
+	if (*mem != RT_NULL)
 	{
 		*memFlag = 1;
 	}
@@ -209,12 +212,12 @@ void * mlc(rt_size_t size, uint8_t * memFlag)
 	return (m);
 }
 
-rt_err_t fr(void * m, uint8_t * memFlag)
+rt_err_t fr(void * mem, uint8_t * memFlag)
 {
 	if (*memFlag)
 	{
 		*memFlag = 0;
-		return (rt_free(m));
+		rt_free(mem);
 	}
 	return (RT_EOK);
 }
@@ -298,9 +301,9 @@ rt_err_t findPacket(rt_size_t * packetLen, struct UARTDevice * pUart, rt_uint8_t
 			return (RT_ETIMEOUT);
 		}
 		*packetLen = 3 + 2 + payloadLen + 3;
-		return (RT_EOK);
+		break;
 	}
-	return (RT_ERROR);
+	return (RT_EOK);
 }
 
 uint16_t mallocReadAreaCmd(uint8_t ** buffer, uint8_t * memFlag, uint32_t ap, uint8_t * epc, uint16_t epcLen,
@@ -329,12 +332,9 @@ uint16_t mallocReadAreaCmd(uint8_t ** buffer, uint8_t * memFlag, uint32_t ap, ui
 	t[i++] = ((uint8_t *) &dl)[1];
 	t[i++] = ((uint8_t *) &dl)[0];
 	t[i++] = 0x7E;
-	t[i++]=;
-	t[i++]=;
-	t[i++]=;
-	t[i++]=;
-	t[i++]=;
-	t[i++]=;
+	uint16_t crc = crc16(t + 1, 16 + epcLen);
+	t[i++] = (crc >> 8) & 0xFF;
+	t[i++] = crc & 0xFF;
 	return (19 + epcLen);
 }
 

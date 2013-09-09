@@ -37,7 +37,6 @@ static const rt_uint8_t rspReadArea[] =
 { 0xBB, 0x01, 0x29 };
 
 static uint8_t isRspTimeOut;
-static struct rt_timer rspTimeOutTimer;
 
 static void rspTimeOut(void * param);
 rt_err_t findPacket(rt_size_t * packetLen, struct UARTDevice * pUart, rt_uint8_t messageType, rt_uint8_t code,
@@ -62,7 +61,6 @@ static rt_uint8_t * userArea;
 static uint8_t userAreaFlag = 0;
 void thread_card(void * param)
 {
-	rt_timer_init(&rspTimeOutTimer, "rspt", rspTimeOut, RT_NULL, 500, RT_TIMER_FLAG_ONE_SHOT);
 	rt_device_t uart2 = rt_device_find("uart2");
 	struct UARTDevice * pUart = (struct UARTDevice *) uart2;
 
@@ -93,7 +91,8 @@ void thread_card(void * param)
 		mallocAfterFree(packetLen, &tempBuffer, &tempBufferFlag);
 		rt_device_read(uart2, 0, tempBuffer, packetLen);
 		//Read TypeC U2
-		if (findPacket(&autoReadPacketLen, pUart, rspReadTypeCU2Header[1], rspReadTypeCU2Header[2], 500) != RT_EOK)
+		if (findPacket(&autoReadPacketLen, pUart, rspReadTypeCU2Header[1], rspReadTypeCU2Header[2],
+				RT_WAITING_FOREVER) != RT_EOK)
 		{
 			continue;
 		}
@@ -270,16 +269,16 @@ rt_err_t findPacket(rt_size_t * packetLen, struct UARTDevice * pUart, rt_uint8_t
 	{ 0xBB, messageType, code };
 	rt_uint8_t temp[3];
 	struct RingBuffer tempRingBuffer;
-	rt_timer_stop(&rspTimeOutTimer);
-	rt_timer_control(&rspTimeOutTimer, RT_TIMER_CTRL_SET_TIME, &timeOut);
+	rt_timer_t timer = rt_timer_create("rsp", rspTimeOut, RT_NULL, timeOut, RT_TIMER_FLAG_ONE_SHOT);
 	isRspTimeOut = 0;
-	rt_timer_start(&rspTimeOutTimer);
+	rt_timer_start(timer);
 	while (1)
 	{
 		tempRingBuffer = pUart->pRxBuffer;
 		//0xBB-MessageType-Code
 		if (waitRingBufferData(&tempRingBuffer, pUart, 3, 5) != RT_EOK)
 		{
+			rt_timer_delete(timer);
 			return (RT_ETIMEOUT);
 		}
 		if (matchArray(&pUart->pRxBuffer, cmd3, 3, temp) != RT_EOK)
@@ -291,6 +290,7 @@ rt_err_t findPacket(rt_size_t * packetLen, struct UARTDevice * pUart, rt_uint8_t
 		//PayloadLength
 		if (waitRingBufferData(&tempRingBuffer, pUart, 2, 5) != RT_EOK)
 		{
+			rt_timer_delete(timer);
 			return (RT_ETIMEOUT);
 		}
 		ringBufferGet(&tempRingBuffer, temp, 2);
@@ -298,11 +298,13 @@ rt_err_t findPacket(rt_size_t * packetLen, struct UARTDevice * pUart, rt_uint8_t
 		//Payload-EndMask-CRC16
 		if (waitRingBufferData(&tempRingBuffer, pUart, payloadLen + 3, 5) != RT_EOK)
 		{
+			rt_timer_delete(timer);
 			return (RT_ETIMEOUT);
 		}
 		*packetLen = 3 + 2 + payloadLen + 3;
 		break;
 	}
+	rt_timer_delete(timer);
 	return (RT_EOK);
 }
 

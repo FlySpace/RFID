@@ -64,7 +64,7 @@ static void RTC_CheckAndConfig(struct rtc_time *tm)
 		RTC_Configuration();
 
 		/* Adjust time by users typed on the hyperterminal */
-		Time_Adjust(tm);
+		//Time_Adjust(tm);
 
 		BKP_WriteBackupRegister(BKP_DR1, 0xA5A5);
 	}
@@ -175,13 +175,13 @@ void Time_Regulate(struct rtc_time *tm, uint16_t YY, uint16_t MM, uint16_t DD, u
  * 输出  ：无
  * 调用  ：外部调用
  */
-void Time_Adjust(struct rtc_time *tm)
+void Time_Adjust(struct rtc_time *tm, uint16_t YY, uint16_t MM, uint16_t DD, uint16_t hh, uint16_t mm, uint16_t ss)
 {
 	/* Wait until last write operation on RTC registers has finished */
 	RTC_WaitForLastTask();
 
 	/* Get time entred by the user on the hyperterminal */
-	Time_Regulate(tm,2013,9,9,19,15,0);
+	Time_Regulate(tm,YY,MM,DD,hh,mm,ss);
 
 	/* Get wday */
 	GregorianDay(tm);
@@ -192,7 +192,7 @@ void Time_Adjust(struct rtc_time *tm)
 	/* Wait until last write operation on RTC registers has finished */
 	RTC_WaitForLastTask();
 }
-FINSH_FUNCTION_EXPORT(Time_Adjust, Time_Adjust(struct rtc_time *tm))
+FINSH_FUNCTION_EXPORT(Time_Adjust, Time_Adjust)
 
 /*
  * This only works for the Gregorian calendar - i.e. after 1752 (in the UK)
@@ -312,6 +312,8 @@ FINSH_FUNCTION_EXPORT(Get_Time, Get_time(u32 tim, struct rtc_time * tm))
 void RTC_Init()
 {
 	NVIC_Configuration();
-	RTC_CheckAndConfig(&TimeNow);
+	RTC_Configuration();
+	Time_Adjust(&TimeNow,2013,1,1,0,0,0);
+//	RTC_CheckAndConfig(&TimeNow);
 }
 /************************END OF FILE***************************************/

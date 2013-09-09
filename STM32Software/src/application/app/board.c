@@ -13,4 +13,5 @@ void hw_board_init()
 	RT8008_Enable();
 	RTC_Init();
 	rt_hw_usart_init();
+	Get_Time(RTC_GetCounter(),&TimeNow);
 }

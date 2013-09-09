@@ -10,6 +10,7 @@
 #include "ringbuffer.h"
 #include "finsh.h"
 #include "stm32f10x.h"
+#include "usart.h"
 
 #define POOL_SIZE_BIT_COUNT 8
 struct RingBuffer cardData;

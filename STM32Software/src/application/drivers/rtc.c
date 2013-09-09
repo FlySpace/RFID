@@ -156,16 +156,16 @@ static void RTC_Configuration(void)
  * 输出  ：用户在超级终端中输入的时间值，单位为 s
  * 调用  ：内部调用
  */
-void Time_Regulate(struct rtc_time *tm, uint16_t YY, uint16_t MM, uint16_t DD, uint16_t hh, uint16_t mm, uint16_t ss)
-{
-	//输入时间
-	tm->tm_year = YY;
-	tm->tm_mon = MM;
-	tm->tm_mday = DD;
-	tm->tm_hour = hh;
-	tm->tm_min = mm;
-	tm->tm_sec = ss;
-}
+//void Time_Regulate(struct rtc_time *tm, uint16_t YY, uint16_t MM, uint16_t DD, uint16_t hh, uint16_t mm, uint16_t ss)
+//{
+//	//输入时间
+//	tm->tm_year = YY;
+//	tm->tm_mon = MM;
+//	tm->tm_mday = DD;
+//	tm->tm_hour = hh;
+//	tm->tm_min = mm;
+//	tm->tm_sec = ss;
+//}
 
 
 /*
@@ -180,11 +180,19 @@ void Time_Adjust(struct rtc_time *tm, uint16_t YY, uint16_t MM, uint16_t DD, uin
 	/* Wait until last write operation on RTC registers has finished */
 	RTC_WaitForLastTask();
 
+	//输入时间
+	tm->tm_year = YY;
+	tm->tm_mon = MM;
+	tm->tm_mday = DD;
+	tm->tm_hour = hh;
+	tm->tm_min = mm;
+	tm->tm_sec = ss;
+
 	/* Get time entred by the user on the hyperterminal */
-	Time_Regulate(tm,YY,MM,DD,hh,mm,ss);
+//	Time_Regulate(tm,YY,MM,DD,hh,mm,ss);
 
 	/* Get wday */
-	GregorianDay(tm);
+//	GregorianDay(tm);
 
 	/* 修改当前RTC计数寄存器内容 */
 	RTC_SetCounter(mktimev(tm));
@@ -192,42 +200,42 @@ void Time_Adjust(struct rtc_time *tm, uint16_t YY, uint16_t MM, uint16_t DD, uin
 	/* Wait until last write operation on RTC registers has finished */
 	RTC_WaitForLastTask();
 }
-FINSH_FUNCTION_EXPORT(Time_Adjust, Time_Adjust)
+
 
 /*
  * This only works for the Gregorian calendar - i.e. after 1752 (in the UK)
  */
 /*计算公历*/
-void GregorianDay(struct rtc_time * tm)
-{
-	int leapsToDate;
-	int lastYear;
-	int day;
-	int MonthOffset[] =
-	{ 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
-
-	lastYear = tm->tm_year - 1;
-
-	/*计算从公元元年到计数的前一年之中一共经历了多少个闰年*/
-	leapsToDate = lastYear / 4 - lastYear / 100 + lastYear / 400;
-
-	/*如若计数的这一年为闰年，且计数的月份在2月之后，则日数加1，否则不加1*/
-	if ((tm->tm_year % 4 == 0) && ((tm->tm_year % 100 != 0) || (tm->tm_year % 400 == 0)) && (tm->tm_mon > 2))
-	{
-		/*
-		 * We are past Feb. 29 in a leap year
-		 */
-		day = 1;
-	}
-	else
-	{
-		day = 0;
-	}
-
-	day += lastYear * 365 + leapsToDate + MonthOffset[tm->tm_mon - 1] + tm->tm_mday; /*计算从公元元年元旦到计数日期一共有多少天*/
-
-	tm->tm_wday = day % 7;
-}
+//void GregorianDay(struct rtc_time * tm)
+//{
+//	int leapsToDate;
+//	int lastYear;
+//	int day;
+//	int MonthOffset[] =
+//	{ 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
+//
+//	lastYear = tm->tm_year - 1;
+//
+//	/*计算从公元元年到计数的前一年之中一共经历了多少个闰年*/
+//	leapsToDate = lastYear / 4 - lastYear / 100 + lastYear / 400;
+//
+//	/*如若计数的这一年为闰年，且计数的月份在2月之后，则日数加1，否则不加1*/
+//	if ((tm->tm_year % 4 == 0) && ((tm->tm_year % 100 != 0) || (tm->tm_year % 400 == 0)) && (tm->tm_mon > 2))
+//	{
+//		/*
+//		 * We are past Feb. 29 in a leap year
+//		 */
+//		day = 1;
+//	}
+//	else
+//	{
+//		day = 0;
+//	}
+//
+//	day += lastYear * 365 + leapsToDate + MonthOffset[tm->tm_mon - 1] + tm->tm_mday; /*计算从公元元年元旦到计数日期一共有多少天*/
+//
+//	tm->tm_wday = day % 7;
+//}
 
 /* Converts Gregorian date to seconds since 1970-01-01 00:00:00.
  * Assumes input in normal date format, i.e. 1980-12-31 23:59:59
@@ -304,16 +312,30 @@ void Get_Time(u32 tim, struct rtc_time * tm)
 	/*
 	 * Determine the day of week
 	 */
-	GregorianDay(tm);
+//	GregorianDay(tm);
 
 }
-FINSH_FUNCTION_EXPORT(Get_Time, Get_time(u32 tim, struct rtc_time * tm))
+
+void Set_TimeNow(uint16_t YY, uint16_t MM, uint16_t DD, uint16_t hh, uint16_t mm, uint16_t ss)
+{
+	Time_Adjust(&TimeNow,YY,MM,DD,hh,mm,ss);
+}
+FINSH_FUNCTION_EXPORT(Set_TimeNow, Set_TimeNow(YY,MM,DD,hh,mm,ss))
+
+void Get_TimeNow()
+{
+	Get_Time(RTC_GetCounter(), &TimeNow);
+	rt_kprintf("%.4d-%.2d-%.2d %.2d:%.2d:%.2d", TimeNow.tm_year,TimeNow.tm_mon,TimeNow.tm_mday,TimeNow.tm_hour,TimeNow.tm_min,TimeNow.tm_sec);
+
+}
+FINSH_FUNCTION_EXPORT(Get_TimeNow, Get_TimeNow)
+
 
 void RTC_Init()
 {
 	NVIC_Configuration();
 	RTC_Configuration();
-	Time_Adjust(&TimeNow,2013,1,1,0,0,0);
+//	Time_Adjust(&TimeNow,2013,1,1,0,0,0);
 //	RTC_CheckAndConfig(&TimeNow);
 }
 /************************END OF FILE***************************************/

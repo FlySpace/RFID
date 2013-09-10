@@ -32,6 +32,17 @@ void thread_card_control(void * param)
 	rt_thread_startup(card_thread);
 }
 
+rt_err_t deleteCardData()
+{
+	uint8_t temp[20];
+	rt_base_t l = rt_hw_interrupt_disable();
+	while (ringBufferGet(&cardData, temp, 20) > 0)
+	{
+	}
+	rt_hw_interrupt_enable(l);
+}
+FINSH_FUNCTION_EXPORT(deleteCardData, rt_err_t deleteCardData())
+
 rt_err_t lookCardData()
 {
 	struct CardDataHeader header;

@@ -24,6 +24,9 @@ static rt_uint8_t UART1TxBuffer[UART1_TX_BUFFER_SIZE];
 static struct UARTDevice uart2;
 static rt_uint8_t UART2RxBuffer[UART2_RX_BUFFER_SIZE];
 static rt_uint8_t UART2TxBuffer[UART2_TX_BUFFER_SIZE];
+static struct UARTDevice uart3;
+static rt_uint8_t UART3RxBuffer[UART3_RX_BUFFER_SIZE];
+static rt_uint8_t UART3TxBuffer[UART3_TX_BUFFER_SIZE];
 
 /* USART1_REMAP = 0 */
 #define UART1_GPIO_TX		GPIO_Pin_9
@@ -41,6 +44,14 @@ static rt_uint8_t UART2TxBuffer[UART2_TX_BUFFER_SIZE];
 #define UART2_TX_DMA		DMA1_Channel7
 #define UART2_RX_DMA		DMA1_Channel6
 
+/* USART2_REMAP = 0 */
+#define UART3_GPIO_TX		GPIO_Pin_10
+#define UART3_GPIO_RX		GPIO_Pin_11
+#define UART3_GPIO			GPIOB
+#define RCC_APBPeriph_UART3	RCC_APB1Periph_USART3
+#define UART3_TX_DMA		DMA1_Channel2
+#define UART3_RX_DMA		DMA1_Channel3
+
 static void RCC_Configuration(void)
 {
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
@@ -50,6 +61,9 @@ static void RCC_Configuration(void)
 
 	/* Enable USART2 clock */
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
+
+	/* Enable USART3 and GPIOB clocks */
+	RCC_APB2PeriphClockCmd(RCC_APB1Periph_USART3 | RCC_APB2Periph_GPIOB, ENABLE);
 }
 
 static void GPIO_Configuration(void)
@@ -77,6 +91,17 @@ static void GPIO_Configuration(void)
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(UART2_GPIO, &GPIO_InitStructure);
+
+	/* Configure USART3 Rx as input floating */
+	GPIO_InitStructure.GPIO_Pin = UART2_GPIO_RX;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+	GPIO_Init(UART3_GPIO, &GPIO_InitStructure);
+
+	/* Configure USART3 Tx as alternate function push-pull */
+	GPIO_InitStructure.GPIO_Pin = UART2_GPIO_TX;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Init(UART3_GPIO, &GPIO_InitStructure);
 }
 
 static void NVIC_Configuration(void)
@@ -92,6 +117,13 @@ static void NVIC_Configuration(void)
 
 	/* Enable the USART2 Interrupt */
 	NVIC_InitStructure.NVIC_IRQChannel = USART2_IRQn;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructure);
+
+	/* Enable the USART3 Interrupt */
+	NVIC_InitStructure.NVIC_IRQChannel = USART3_IRQn;
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
@@ -120,6 +152,16 @@ static void USART_Configuration(void)
 	USART_ClockInit(USART2, &USART_ClockInitStructure);
 	USART_Cmd(USART2, ENABLE);
 	USART_ClearFlag(USART2, USART_FLAG_TC );
+
+	//uart3
+	USART_ClockInitStructure.USART_Clock = USART_Clock_Disable;
+	USART_ClockInitStructure.USART_CPOL = USART_CPOL_Low;
+	USART_ClockInitStructure.USART_CPHA = USART_CPHA_2Edge;
+	USART_ClockInitStructure.USART_LastBit = USART_LastBit_Disable;
+
+	USART_ClockInit(USART3, &USART_ClockInitStructure);
+	USART_Cmd(USART3, ENABLE);
+	USART_ClearFlag(USART3, USART_FLAG_TC );
 }
 
 unsigned int crc16(unsigned char *ptr, unsigned char count)
@@ -178,6 +220,28 @@ static rt_err_t uart2Init(rt_device_t dev)
 	config.USART_StopBits = USART_StopBits_1;
 	config.USART_WordLength = USART_WordLength_8b;
 	rt_device_control(&uart2.parent, CONFIGURE, &config);
+
+	dev->flag |= RT_DEVICE_FLAG_ACTIVATED;
+
+	rt_hw_interrupt_enable(l);
+	return (RT_EOK);
+}
+
+static rt_err_t uart3Init(rt_device_t dev)
+{
+	rt_base_t l = rt_hw_interrupt_disable();
+
+	uart3.USARTx = USART3;
+	rt_mutex_init(&uart3.writeLock, "", RT_IPC_FLAG_PRIO);
+	ringBufferInit(&uart3.pRxBuffer, UART3RxBuffer, UART3_RX_BUFFER_SIZE_BIT_COUNT);
+	ringBufferInit(&uart3.pTxBuffer, UART3TxBuffer, UART3_TX_BUFFER_SIZE_BIT_COUNT);
+	struct UARTControlArgConfigure config;
+	config.USART_BaudRate = 115200;
+	config.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+	config.USART_Parity = USART_Parity_No;
+	config.USART_StopBits = USART_StopBits_1;
+	config.USART_WordLength = USART_WordLength_8b;
+	rt_device_control(&uart3.parent, CONFIGURE, &config);
 
 	dev->flag |= RT_DEVICE_FLAG_ACTIVATED;
 
@@ -357,6 +421,9 @@ void rt_hw_usart_init()
 			RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX | RT_DEVICE_FLAG_INT_TX | RT_DEVICE_FLAG_STREAM, RT_NULL,
 			uart2Init);
 
+	uartRegister(&uart3, "uart3",
+			RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX | RT_DEVICE_FLAG_INT_TX | RT_DEVICE_FLAG_STREAM, RT_NULL,
+			uart3Init);
 }
 
 rt_uint32_t uartCalcDelayTicks(rt_uint32_t charCount, rt_uint32_t baudRate, rt_uint32_t bitPerChar)
@@ -375,5 +442,12 @@ void USART2_IRQHandler()
 {
 	rt_interrupt_enter();
 	uartISR(&uart2);
+	rt_interrupt_leave();
+}
+
+void USART3_IRQHandler()
+{
+	rt_interrupt_enter();
+	uartISR(&uart3);
 	rt_interrupt_leave();
 }

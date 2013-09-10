@@ -94,7 +94,7 @@ void thread_card(void * param)
 		mallocAfterFree(packetLen, &tempBuffer, &tempBufferFlag);
 		rt_device_read(uart2, 0, tempBuffer, packetLen);
 		//Read TypeC U2
-		if (findPacket(&autoReadPacketLen, pUart, rspReadTypeCU2Header[1], rspReadTypeCU2Header[2], 100000) != RT_EOK)
+		if (findPacket(&autoReadPacketLen, pUart, rspReadTypeCU2Header[1], rspReadTypeCU2Header[2], 1000) != RT_EOK)
 		{
 			continue;
 		}

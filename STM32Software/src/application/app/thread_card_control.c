@@ -36,13 +36,16 @@ rt_err_t lookCardData()
 {
 	struct CardDataHeader header;
 	uint8_t * buffer;
-	while (ringBufferDataSize(&cardData) > 0)
+	struct RingBuffer data = cardData;
+	while (ringBufferDataSize(&data) > 0)
 	{
-		rt_kprintf("**********************");
-		ringBufferGet(&cardData, (uint8_t *) &header, sizeof(header));
+		rt_kprintf("\n\n********************************");
+		ringBufferGet(&data, (uint8_t *) &header, sizeof(header));
+		rt_kprintf("\nTime: %.4d-%.2d-%.2d %.2d:%.2d:%.2d\n", header.time.tm_year, header.time.tm_mon,
+				header.time.tm_mday, header.time.tm_hour, header.time.tm_min, header.time.tm_sec);
 		//
 		buffer = rt_malloc(header.reserved);
-		ringBufferGet(&cardData, buffer, header.reserved);
+		ringBufferGet(&data, buffer, header.reserved);
 		rt_kprintf("\nReserved:\n");
 		for (int j = 0; j < header.reserved; j++)
 		{
@@ -51,7 +54,7 @@ rt_err_t lookCardData()
 		rt_free(buffer);
 		//
 		buffer = rt_malloc(header.epc);
-		ringBufferGet(&cardData, buffer, header.epc);
+		ringBufferGet(&data, buffer, header.epc);
 		rt_kprintf("\nEPC:\n");
 		for (int j = 0; j < header.epc; j++)
 		{
@@ -60,7 +63,7 @@ rt_err_t lookCardData()
 		rt_free(buffer);
 		//
 		buffer = rt_malloc(header.tid);
-		ringBufferGet(&cardData, buffer, header.tid);
+		ringBufferGet(&data, buffer, header.tid);
 		rt_kprintf("\nTID:\n");
 		for (int j = 0; j < header.tid; j++)
 		{
@@ -69,7 +72,7 @@ rt_err_t lookCardData()
 		rt_free(buffer);
 		//
 		buffer = rt_malloc(header.user);
-		ringBufferGet(&cardData, buffer, header.user);
+		ringBufferGet(&data, buffer, header.user);
 		rt_kprintf("\nUser:\n");
 		for (int j = 0; j < header.user; j++)
 		{

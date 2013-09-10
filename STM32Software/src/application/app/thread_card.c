@@ -76,7 +76,7 @@ void thread_card(void * param)
 	{
 		//Reset
 		rt_device_write(uart2, 0, cmdReset, sizeof(cmdReset));
-		rt_thread_delay(200);
+		rt_thread_delay(500);
 		mallocAfterFree(20, &tempBuffer, &tempBufferFlag);
 		do
 		{
@@ -173,11 +173,12 @@ void thread_card(void * param)
 		rt_enter_critical();
 		if (ringBufferEmptySize(&cardData) >= sizeof(header) + header.reserved + header.epc + header.tid + header.user)
 		{
+			Get_Time(RTC_GetCounter(), &header.time);
 			ringBufferPut(&cardData, (uint8_t *) &header, sizeof(header));
-			ringBufferPut(&cardData, (uint8_t *) reservedArea, header.reserved);
-			ringBufferPut(&cardData, (uint8_t *) epcArea, header.epc);
-			ringBufferPut(&cardData, (uint8_t *) tidArea, header.tid);
-			ringBufferPut(&cardData, (uint8_t *) userArea, header.user);
+			ringBufferPut(&cardData, reservedArea + 5, header.reserved);
+			ringBufferPut(&cardData, epcArea + 5, header.epc);
+			ringBufferPut(&cardData, tidArea + 5, header.tid);
+			ringBufferPut(&cardData, userArea + 5, header.user);
 		}
 		rt_exit_critical();
 	}
@@ -193,7 +194,7 @@ void mallocAfterFree(rt_size_t size, uint8_t ** mem, uint8_t * memFlag)
 	if (*memFlag)
 	{
 		*memFlag = 0;
-		rt_free(mem);
+		rt_free(*mem);
 	}
 	*mem = rt_malloc(size);
 	if (*mem != RT_NULL)

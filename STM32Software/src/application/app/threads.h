@@ -10,6 +10,7 @@
 
 #include "ringbuffer.h"
 #include "stm32f10x.h"
+#include "rtc.h"
 
 #define THREAD_BOOT_NAME "boot"
 #define THREAD_BUTTON_NAME "button"
@@ -24,6 +25,7 @@ struct CardDataHeader
 	uint16_t epc;
 	uint16_t tid;
 	uint16_t user;
+	struct rtc_time time;
 };
 
 extern struct RingBuffer cardData;

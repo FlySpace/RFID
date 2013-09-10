@@ -11,10 +11,6 @@
 #include "stdio.h"
 #include "stm32f10x.h"
 
-extern uint8_t a[];
-void USART1_BT_Tx(uint8_t *BTTxArray);
-void rt_hw_usart_init(void);
-
 void thread_boot(void * param)
 {
 

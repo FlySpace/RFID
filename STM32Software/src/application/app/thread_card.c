@@ -70,13 +70,14 @@ void thread_card(void * param)
 	rt_size_t autoReadPacketLen;
 	uint8_t lastTypeCU2CRC[2] =
 	{ 0, 0 };
+	rt_tick_t lastTypeCU2Tick = rt_tick_get();
 
 	rt_device_open(uart2, RT_DEVICE_OFLAG_RDWR);
 	while (1)
 	{
 		//Reset
 		rt_device_write(uart2, 0, cmdReset, sizeof(cmdReset));
-		rt_thread_delay(500);
+		rt_thread_delay(1000);
 		mallocAfterFree(20, &tempBuffer, &tempBufferFlag);
 		do
 		{
@@ -93,7 +94,7 @@ void thread_card(void * param)
 		mallocAfterFree(packetLen, &tempBuffer, &tempBufferFlag);
 		rt_device_read(uart2, 0, tempBuffer, packetLen);
 		//Read TypeC U2
-		if (findPacket(&autoReadPacketLen, pUart, rspReadTypeCU2Header[1], rspReadTypeCU2Header[2], 500) != RT_EOK)
+		if (findPacket(&autoReadPacketLen, pUart, rspReadTypeCU2Header[1], rspReadTypeCU2Header[2], 100000) != RT_EOK)
 		{
 			continue;
 		}
@@ -116,13 +117,19 @@ void thread_card(void * param)
 		}
 		mallocAfterFree(packetLen, &tempBuffer, &tempBufferFlag);
 		rt_device_read(uart2, 0, tempBuffer, packetLen);
+		uint8_t sameCard = 0;
 		if (lastTypeCU2CRC[0] == autoReadPacket[autoReadPacketLen - 2]
-				&& lastTypeCU2CRC[1] == autoReadPacket[autoReadPacketLen - 1])
+				&& lastTypeCU2CRC[1] == autoReadPacket[autoReadPacketLen - 1] && rt_tick_get() - lastTypeCU2Tick < 2000)
 		{
-			continue;
+			sameCard = 1;
 		}
 		lastTypeCU2CRC[0] = autoReadPacket[autoReadPacketLen - 2];
 		lastTypeCU2CRC[1] = autoReadPacket[autoReadPacketLen - 1];
+		lastTypeCU2Tick = rt_tick_get();
+		if (sameCard)
+		{
+			continue;
+		}
 		//Read Area
 		struct CardDataHeader header;
 		//Read Reserved Area

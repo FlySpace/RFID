@@ -63,7 +63,8 @@ static void RCC_Configuration(void)
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
 
 	/* Enable USART3 and GPIOB clocks */
-	RCC_APB2PeriphClockCmd(RCC_APB1Periph_USART3 | RCC_APB2Periph_GPIOB, ENABLE);
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
 }
 
 static void GPIO_Configuration(void)
@@ -93,12 +94,12 @@ static void GPIO_Configuration(void)
 	GPIO_Init(UART2_GPIO, &GPIO_InitStructure);
 
 	/* Configure USART3 Rx as input floating */
-	GPIO_InitStructure.GPIO_Pin = UART2_GPIO_RX;
+	GPIO_InitStructure.GPIO_Pin = UART3_GPIO_RX;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
 	GPIO_Init(UART3_GPIO, &GPIO_InitStructure);
 
 	/* Configure USART3 Tx as alternate function push-pull */
-	GPIO_InitStructure.GPIO_Pin = UART2_GPIO_TX;
+	GPIO_InitStructure.GPIO_Pin = UART3_GPIO_TX;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(UART3_GPIO, &GPIO_InitStructure);
@@ -141,7 +142,7 @@ static void USART_Configuration(void)
 
 	USART_ClockInit(USART1, &USART_ClockInitStructure);
 	USART_Cmd(USART1, ENABLE);
-	USART_ClearFlag(USART1, USART_FLAG_TC );
+	USART_ClearFlag(USART1, USART_FLAG_TC);
 
 	//uart2
 	USART_ClockInitStructure.USART_Clock = USART_Clock_Disable;
@@ -151,7 +152,7 @@ static void USART_Configuration(void)
 
 	USART_ClockInit(USART2, &USART_ClockInitStructure);
 	USART_Cmd(USART2, ENABLE);
-	USART_ClearFlag(USART2, USART_FLAG_TC );
+	USART_ClearFlag(USART2, USART_FLAG_TC);
 
 	//uart3
 	USART_ClockInitStructure.USART_Clock = USART_Clock_Disable;
@@ -161,7 +162,7 @@ static void USART_Configuration(void)
 
 	USART_ClockInit(USART3, &USART_ClockInitStructure);
 	USART_Cmd(USART3, ENABLE);
-	USART_ClearFlag(USART3, USART_FLAG_TC );
+	USART_ClearFlag(USART3, USART_FLAG_TC);
 }
 
 unsigned int crc16(unsigned char *ptr, unsigned char count)
@@ -256,8 +257,8 @@ static rt_err_t uartOpen(struct rt_device *dev, rt_uint16_t oflag)
 	struct UARTDevice * pUart = (struct UARTDevice *) dev;
 	USART_ITConfig(pUart->USARTx, USART_IT_RXNE, ENABLE);
 	USART_ITConfig(pUart->USARTx, USART_IT_TXE, DISABLE);
-	USART_ClearITPendingBit(pUart->USARTx, USART_IT_RXNE );
-	USART_ClearITPendingBit(pUart->USARTx, USART_IT_TXE );
+	USART_ClearITPendingBit(pUart->USARTx, USART_IT_RXNE);
+	USART_ClearITPendingBit(pUart->USARTx, USART_IT_TXE);
 
 	rt_hw_interrupt_enable(l);
 	return (RT_EOK);
@@ -368,7 +369,7 @@ static void uartISR(struct UARTDevice * pUart)
 {
 	rt_base_t level = rt_hw_interrupt_disable();
 
-	if (USART_GetFlagStatus(pUart->USARTx, USART_FLAG_RXNE ) == SET)
+	if (USART_GetFlagStatus(pUart->USARTx, USART_FLAG_RXNE) == SET)
 	{
 		unsigned char ch = USART_ReceiveData(pUart->USARTx) & 0xff;
 		rt_size_t length = ringBufferPut(&pUart->pRxBuffer, &ch, 1);
@@ -378,7 +379,7 @@ static void uartISR(struct UARTDevice * pUart)
 		}
 	}
 
-	if (USART_GetITStatus(pUart->USARTx, USART_IT_TXE ) == SET)
+	if (USART_GetITStatus(pUart->USARTx, USART_IT_TXE) == SET)
 	{
 		rt_uint8_t ch;
 		rt_size_t length = ringBufferGet(&pUart->pTxBuffer, &ch, 1);
@@ -414,16 +415,13 @@ void rt_hw_usart_init()
 	USART_Configuration();
 
 	uartRegister(&uart1, "uart1",
-			RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX | RT_DEVICE_FLAG_INT_TX | RT_DEVICE_FLAG_STREAM, RT_NULL,
-			uart1Init);
+	RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX | RT_DEVICE_FLAG_INT_TX | RT_DEVICE_FLAG_STREAM, RT_NULL, uart1Init);
 
 	uartRegister(&uart2, "uart2",
-			RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX | RT_DEVICE_FLAG_INT_TX | RT_DEVICE_FLAG_STREAM, RT_NULL,
-			uart2Init);
+	RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX | RT_DEVICE_FLAG_INT_TX | RT_DEVICE_FLAG_STREAM, RT_NULL, uart2Init);
 
 	uartRegister(&uart3, "uart3",
-			RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX | RT_DEVICE_FLAG_INT_TX | RT_DEVICE_FLAG_STREAM, RT_NULL,
-			uart3Init);
+	RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX | RT_DEVICE_FLAG_INT_TX | RT_DEVICE_FLAG_STREAM, RT_NULL, uart3Init);
 }
 
 rt_uint32_t uartCalcDelayTicks(rt_uint32_t charCount, rt_uint32_t baudRate, rt_uint32_t bitPerChar)

@@ -32,14 +32,14 @@ void rtthread_startup()
 	rt_console_init();
 
 	finsh_system_init();
-	finsh_set_device("uart3");
+	finsh_set_device("uart1");
 
 	rt_system_scheduler_start();
 }
 
 static void rt_console_init()
 {
-	rt_device_t pUart = rt_device_find("uart3");
+	rt_device_t pUart = rt_device_find("uart1");
 	struct UARTControlArgConfigure config;
 	config.USART_BaudRate = 115200;
 	config.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
@@ -48,7 +48,7 @@ static void rt_console_init()
 	config.USART_WordLength = USART_WordLength_8b;
 	rt_device_control(pUart, CONFIGURE, &config);
 
-	rt_console_set_device("uart3");
+	rt_console_set_device("uart1");
 }
 
 /*用户线程初始化*/

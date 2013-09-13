@@ -15,6 +15,11 @@
 #define POOL_SIZE_BIT_COUNT 10
 struct RingBuffer cardData;
 static unsigned char pool[1 << POOL_SIZE_BIT_COUNT];
+typedef enum
+{
+	Idle = 0, Reset, ReadTagData, WriteTagData,
+} STATEFLAG;
+extern STATEFLAG stateFlag;
 
 void thread_card_control(void * param)
 {
@@ -50,7 +55,7 @@ rt_err_t lookCardData()
 	struct RingBuffer data = cardData;
 	while (ringBufferDataSize(&data) > 0)
 	{
-		rt_kprintf("\n\n********************************");
+		rt_kprintf("\n***********************************************");
 		ringBufferGet(&data, (uint8_t *) &header, sizeof(header));
 		rt_kprintf("\nTime: %.4d-%.2d-%.2d %.2d:%.2d:%.2d\n", header.time.tm_year, header.time.tm_mon,
 				header.time.tm_mday, header.time.tm_hour, header.time.tm_min, header.time.tm_sec);
@@ -89,6 +94,7 @@ rt_err_t lookCardData()
 		{
 			rt_kprintf("%.2X ", buffer[j]);
 		}
+		rt_kprintf("\n");
 		rt_free(buffer);
 	}
 	return (RT_EOK);
@@ -104,3 +110,12 @@ rt_err_t look(unsigned char * p, unsigned int len)
 	return (RT_EOK);
 }
 FINSH_FUNCTION_EXPORT(look, rt_err_t look(unsigned char * p, unsigned int len))
+FINSH_FUNCTION_EXPORT(rt_kprintf, printf)
+
+rt_err_t setState(STATEFLAG state)
+{
+	stateFlag = state;
+	return (RT_EOK);
+}
+FINSH_FUNCTION_EXPORT(setState,setState(Idle/Reset/ReadTagData/WriteTagData))
+

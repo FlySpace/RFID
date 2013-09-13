@@ -12,6 +12,18 @@
 #include "usart.h"
 #include "string.h"
 
+static const rt_uint8_t cmdSetRegionChina2[] =
+{ 0xBB, 0x00, 0x07, 0x00, 0x01, 0x52, 0x7E, 0xA9, 0x70 };
+
+static const rt_uint8_t rspSetRegionChina2CompleteHeader[] =
+{ 0xBB, 0x01, 0x07 };
+
+static const rt_uint8_t cmdSetRFChannel10[] =
+{ 0xBB, 0x00, 0x12, 0x00, 0x02, 0x0A, 0x00, 0x7E, 0xD5, 0xFA };
+
+static const rt_uint8_t rspSetRFChannel10[] =
+{ 0xBB, 0x01, 0x12 };
+
 static const rt_uint8_t cmdReset[] =
 { 0xBB, 0x00, 0x08, 0x00, 0x00, 0x7E, 0x0B, 0x96 };
 
@@ -60,6 +72,13 @@ static rt_uint8_t * tidArea;
 static uint8_t tidAreaFlag = 0;
 static rt_uint8_t * userArea;
 static uint8_t userAreaFlag = 0;
+
+typedef enum
+{
+	Idle = 0, Reset, ReadTagData, WriteTagData,
+} STATEFLAG;
+STATEFLAG stateFlag;
+
 void thread_card(void * param)
 {
 	rt_timer_init(&rspTimeOutTimer, "rspt", rspTimeOut, RT_NULL, 500, RT_TIMER_FLAG_ONE_SHOT);
@@ -73,121 +92,191 @@ void thread_card(void * param)
 	rt_tick_t lastTypeCU2Tick = rt_tick_get();
 
 	rt_device_open(uart2, RT_DEVICE_OFLAG_RDWR);
+//Set Region to China2
+	rt_device_write(uart2, 0, cmdSetRegionChina2, sizeof(cmdSetRegionChina2));
+	mallocAfterFree(20, &tempBuffer, &tempBufferFlag);
+	do
+	{
+		rt_thread_delay(10);
+	} while (rt_device_read(uart2, 0, tempBuffer, 20) > 0);
+//Set RF Channel to 10
+	rt_device_write(uart2, 0, cmdSetRFChannel10, sizeof(cmdSetRFChannel10));
+	mallocAfterFree(20, &tempBuffer, &tempBufferFlag);
+	do
+	{
+		rt_thread_delay(10);
+	} while (rt_device_read(uart2, 0, tempBuffer, 20) > 0);
+
+	stateFlag = Idle;
+
 	while (1)
 	{
-		//Reset
-		rt_device_write(uart2, 0, cmdReset, sizeof(cmdReset));
-		rt_thread_delay(1000);
-		mallocAfterFree(20, &tempBuffer, &tempBufferFlag);
-		do
+		if (stateFlag == Reset)
 		{
-			rt_thread_delay(10);
-		} while (rt_device_read(uart2, 0, tempBuffer, 20) > 0);
+			//Reset
+			rt_device_write(uart2, 0, cmdReset, sizeof(cmdReset));
+			rt_thread_delay(1000);
+			mallocAfterFree(20, &tempBuffer, &tempBufferFlag);
+			do
+			{
+				rt_thread_delay(10);
+			} while (rt_device_read(uart2, 0, tempBuffer, 20) > 0);
 
-		//Start Auto Read
-		rt_device_write(uart2, 0, cmdStartAutoRead2, sizeof(cmdStartAutoRead2));
-		if (findPacket(&packetLen, pUart, rspStartAutoRead2CompleteHeader[1], rspStartAutoRead2CompleteHeader[2],
-				500)!=RT_EOK)
-		{
-			continue;
+			//Set Region to China2
+			rt_device_write(uart2, 0, cmdSetRegionChina2, sizeof(cmdSetRegionChina2));
+			mallocAfterFree(20, &tempBuffer, &tempBufferFlag);
+			do
+			{
+				rt_thread_delay(10);
+			} while (rt_device_read(uart2, 0, tempBuffer, 20) > 0);
+			//Set RF Channel to 10
+			rt_device_write(uart2, 0, cmdSetRFChannel10, sizeof(cmdSetRFChannel10));
+			mallocAfterFree(20, &tempBuffer, &tempBufferFlag);
+			do
+			{
+				rt_thread_delay(10);
+			} while (rt_device_read(uart2, 0, tempBuffer, 20) > 0);
+			stateFlag = Idle;
 		}
-		mallocAfterFree(packetLen, &tempBuffer, &tempBufferFlag);
-		rt_device_read(uart2, 0, tempBuffer, packetLen);
-		//Read TypeC U2
-		if (findPacket(&autoReadPacketLen, pUart, rspReadTypeCU2Header[1], rspReadTypeCU2Header[2], 100000) != RT_EOK)
+
+//Start Auto Read
+		else if (stateFlag == ReadTagData)
 		{
-			continue;
+			while (1)
+			{
+				rt_device_write(uart2, 0, cmdStartAutoRead2, sizeof(cmdStartAutoRead2));
+				if (findPacket(&packetLen, pUart, rspStartAutoRead2CompleteHeader[1],
+						rspStartAutoRead2CompleteHeader[2], 500) != RT_EOK)
+				{
+					stateFlag=Reset;
+					break;
+					//continue;
+				}
+				mallocAfterFree(packetLen, &tempBuffer, &tempBufferFlag);
+				rt_device_read(uart2, 0, tempBuffer, packetLen);
+				//Read TypeC U2
+				if (findPacket(&autoReadPacketLen, pUart, rspReadTypeCU2Header[1], rspReadTypeCU2Header[2],
+						1000) != RT_EOK)
+				{
+					stateFlag=Reset;
+					break;
+					//continue;
+				}
+				mallocAfterFree(autoReadPacketLen, &autoReadPacket, &autoReadPacketFlag);
+				rt_device_read(uart2, 0, autoReadPacket, autoReadPacketLen);
+				// Read TypeC U2 Complete
+				if (findPacket(&packetLen, pUart, rspReadTypeCU2CompleteHeader[1], rspReadTypeCU2CompleteHeader[2],
+						500)!=RT_EOK)
+				{
+					stateFlag=Reset;
+					break;
+					//continue;
+				}
+				mallocAfterFree(packetLen, &tempBuffer, &tempBufferFlag);
+				rt_device_read(uart2, 0, tempBuffer, packetLen);
+				//Stop Auto Read
+				rt_device_write(uart2, 0, cmdStopAutoRead2, sizeof(cmdStopAutoRead2));
+				if (findPacket(&packetLen, pUart, rspStopAutoRead2CompleteHeader[1], rspStopAutoRead2CompleteHeader[2],
+						500) != RT_EOK)
+				{
+					stateFlag=Reset;
+					break;
+					//continue;
+				}
+				mallocAfterFree(packetLen, &tempBuffer, &tempBufferFlag);
+				rt_device_read(uart2, 0, tempBuffer, packetLen);
+				uint8_t sameCard = 0;
+				if (lastTypeCU2CRC[0] == autoReadPacket[autoReadPacketLen - 2]
+						&& lastTypeCU2CRC[1] == autoReadPacket[autoReadPacketLen - 1]
+						&& rt_tick_get() - lastTypeCU2Tick < 2000)
+				{
+					sameCard = 1;
+				}
+				lastTypeCU2CRC[0] = autoReadPacket[autoReadPacketLen - 2];
+				lastTypeCU2CRC[1] = autoReadPacket[autoReadPacketLen - 1];
+				lastTypeCU2Tick = rt_tick_get();
+				if (sameCard)
+				{
+					stateFlag=Reset;
+					break;
+					//continue;
+				}
+				//Read Area
+				struct CardDataHeader header;
+				//Read Reserved Area
+				packetLen = mallocReadAreaCmd(&tempBuffer, &tempBufferFlag, 0x00000000, autoReadPacket + 7,
+						autoReadPacketLen - 10, 0x00, 0x0000, 0x0000);
+				rt_device_write(uart2, 0, tempBuffer, packetLen);
+				if (findPacket(&packetLen, pUart, rspReadArea[1], rspReadArea[2], 500) != RT_EOK)
+				{
+					stateFlag=Reset;
+					break;
+					//continue;
+				}
+				mallocAfterFree(packetLen, &reservedArea, &reservedAreaFlag);
+				rt_device_read(uart2, 0, reservedArea, packetLen);
+				header.reserved = packetLen - 8;
+				//Read EPC Area
+				packetLen = mallocReadAreaCmd(&tempBuffer, &tempBufferFlag, 0x00000000, autoReadPacket + 7,
+						autoReadPacketLen - 10, 0x01, 0x0000, 0x0000);
+				rt_device_write(uart2, 0, tempBuffer, packetLen);
+				if (findPacket(&packetLen, pUart, rspReadArea[1], rspReadArea[2], 500) != RT_EOK)
+				{
+					stateFlag=Reset;
+					break;
+					//continue;
+				}
+				mallocAfterFree(packetLen, &epcArea, &epcAreaFlag);
+				rt_device_read(uart2, 0, epcArea, packetLen);
+				header.epc = packetLen - 8;
+				//Read TID Area
+				packetLen = mallocReadAreaCmd(&tempBuffer, &tempBufferFlag, 0x00000000, autoReadPacket + 7,
+						autoReadPacketLen - 10, 0x02, 0x0000, 0x0000);
+				rt_device_write(uart2, 0, tempBuffer, packetLen);
+				if (findPacket(&packetLen, pUart, rspReadArea[1], rspReadArea[2], 500) != RT_EOK)
+				{
+					stateFlag=Reset;
+					break;
+					//continue;
+				}
+				mallocAfterFree(packetLen, &tidArea, &tidAreaFlag);
+				rt_device_read(uart2, 0, tidArea, packetLen);
+				header.tid = packetLen - 8;
+				//Read User Area
+				packetLen = mallocReadAreaCmd(&tempBuffer, &tempBufferFlag, 0x00000000, autoReadPacket + 7,
+						autoReadPacketLen - 10, 0x03, 0x0000, 0x0000);
+				rt_device_write(uart2, 0, tempBuffer, packetLen);
+				if (findPacket(&packetLen, pUart, rspReadArea[1], rspReadArea[2], 500) != RT_EOK)
+				{
+					stateFlag=Reset;
+					break;
+					//continue;
+				}
+				mallocAfterFree(packetLen, &userArea, &userAreaFlag);
+				rt_device_read(uart2, 0, userArea, packetLen);
+				header.user = packetLen - 8;
+				//Save
+				rt_enter_critical();
+				if (ringBufferEmptySize(&cardData)
+						>= sizeof(header) + header.reserved + header.epc + header.tid + header.user)
+				{
+					Get_Time(RTC_GetCounter(), &header.time);
+					ringBufferPut(&cardData, (uint8_t *) &header, sizeof(header));
+					ringBufferPut(&cardData, reservedArea + 5, header.reserved);
+					ringBufferPut(&cardData, epcArea + 5, header.epc);
+					ringBufferPut(&cardData, tidArea + 5, header.tid);
+					ringBufferPut(&cardData, userArea + 5, header.user);
+					lookCardData();
+					deleteCardData();
+				}
+				rt_exit_critical();
+			}
 		}
-		mallocAfterFree(autoReadPacketLen, &autoReadPacket, &autoReadPacketFlag);
-		rt_device_read(uart2, 0, autoReadPacket, autoReadPacketLen);
-		// Read TypeC U2 Complete
-		if (findPacket(&packetLen, pUart, rspReadTypeCU2CompleteHeader[1], rspReadTypeCU2CompleteHeader[2],
-				500)!=RT_EOK)
+		else if (stateFlag == WriteTagData)
 		{
-			continue;
+
 		}
-		mallocAfterFree(packetLen, &tempBuffer, &tempBufferFlag);
-		rt_device_read(uart2, 0, tempBuffer, packetLen);
-		//Stop Auto Read
-		rt_device_write(uart2, 0, cmdStopAutoRead2, sizeof(cmdStopAutoRead2));
-		if (findPacket(&packetLen, pUart, rspStopAutoRead2CompleteHeader[1], rspStopAutoRead2CompleteHeader[2],
-				500)!=RT_EOK)
-		{
-			continue;
-		}
-		mallocAfterFree(packetLen, &tempBuffer, &tempBufferFlag);
-		rt_device_read(uart2, 0, tempBuffer, packetLen);
-		uint8_t sameCard = 0;
-		if (lastTypeCU2CRC[0] == autoReadPacket[autoReadPacketLen - 2]
-				&& lastTypeCU2CRC[1] == autoReadPacket[autoReadPacketLen - 1] && rt_tick_get() - lastTypeCU2Tick < 2000)
-		{
-			sameCard = 1;
-		}
-		lastTypeCU2CRC[0] = autoReadPacket[autoReadPacketLen - 2];
-		lastTypeCU2CRC[1] = autoReadPacket[autoReadPacketLen - 1];
-		lastTypeCU2Tick = rt_tick_get();
-		if (sameCard)
-		{
-			continue;
-		}
-		//Read Area
-		struct CardDataHeader header;
-		//Read Reserved Area
-		packetLen = mallocReadAreaCmd(&tempBuffer, &tempBufferFlag, 0x00000000, autoReadPacket + 7,
-				autoReadPacketLen - 10, 0x00, 0x0000, 0x0000);
-		rt_device_write(uart2, 0, tempBuffer, packetLen);
-		if (findPacket(&packetLen, pUart, rspReadArea[1], rspReadArea[2], 500) != RT_EOK)
-		{
-			continue;
-		}
-		mallocAfterFree(packetLen, &reservedArea, &reservedAreaFlag);
-		rt_device_read(uart2, 0, reservedArea, packetLen);
-		header.reserved = packetLen - 8;
-		//Read EPC Area
-		packetLen = mallocReadAreaCmd(&tempBuffer, &tempBufferFlag, 0x00000000, autoReadPacket + 7,
-				autoReadPacketLen - 10, 0x01, 0x0000, 0x0000);
-		rt_device_write(uart2, 0, tempBuffer, packetLen);
-		if (findPacket(&packetLen, pUart, rspReadArea[1], rspReadArea[2], 500) != RT_EOK)
-		{
-			continue;
-		}
-		mallocAfterFree(packetLen, &epcArea, &epcAreaFlag);
-		rt_device_read(uart2, 0, epcArea, packetLen);
-		header.epc = packetLen - 8;
-		//Read TID Area
-		packetLen = mallocReadAreaCmd(&tempBuffer, &tempBufferFlag, 0x00000000, autoReadPacket + 7,
-				autoReadPacketLen - 10, 0x02, 0x0000, 0x0000);
-		rt_device_write(uart2, 0, tempBuffer, packetLen);
-		if (findPacket(&packetLen, pUart, rspReadArea[1], rspReadArea[2], 500) != RT_EOK)
-		{
-			continue;
-		}
-		mallocAfterFree(packetLen, &tidArea, &tidAreaFlag);
-		rt_device_read(uart2, 0, tidArea, packetLen);
-		header.tid = packetLen - 8;
-		//Read User Area
-		packetLen = mallocReadAreaCmd(&tempBuffer, &tempBufferFlag, 0x00000000, autoReadPacket + 7,
-				autoReadPacketLen - 10, 0x03, 0x0000, 0x0000);
-		rt_device_write(uart2, 0, tempBuffer, packetLen);
-		if (findPacket(&packetLen, pUart, rspReadArea[1], rspReadArea[2], 500) != RT_EOK)
-		{
-			continue;
-		}
-		mallocAfterFree(packetLen, &userArea, &userAreaFlag);
-		rt_device_read(uart2, 0, userArea, packetLen);
-		header.user = packetLen - 8;
-		//Save
-		rt_enter_critical();
-		if (ringBufferEmptySize(&cardData) >= sizeof(header) + header.reserved + header.epc + header.tid + header.user)
-		{
-			Get_Time(RTC_GetCounter(), &header.time);
-			ringBufferPut(&cardData, (uint8_t *) &header, sizeof(header));
-			ringBufferPut(&cardData, reservedArea + 5, header.reserved);
-			ringBufferPut(&cardData, epcArea + 5, header.epc);
-			ringBufferPut(&cardData, tidArea + 5, header.tid);
-			ringBufferPut(&cardData, userArea + 5, header.user);
-		}
-		rt_exit_critical();
+
 	}
 }
 

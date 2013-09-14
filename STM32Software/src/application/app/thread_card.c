@@ -19,6 +19,10 @@ void * mlc(rt_size_t size, uint8_t * memFlag);
 rt_err_t fr(void * mem, uint8_t * memFlag);
 uint16_t mallocReadAreaCmd(uint8_t ** buffer, uint8_t * memFlag, uint32_t ap, uint8_t * epc, uint16_t epcLen,
 		uint8_t mb, uint16_t sa, uint16_t dl);
+uint16_t mallocWriteAreaCmd(uint8_t ** buffer, uint8_t * bufferFlag, uint32_t ap, uint8_t * epc, uint16_t epcLen,
+		uint8_t mb, uint16_t sa, uint8_t * data, uint16_t dl);
+void thread_autoLookAndDeleteCardData(void * param);
+
 static void rspTimeOut(void * param);
 
 struct rt_semaphore cardDataSem;
@@ -180,7 +184,7 @@ void thread_card(void * param)
 		rt_exit_critical();
 		mallocAfterFree(tWriteLength, &tWriteBuffer, &tWriteBufferFlag);
 		memcpy(tWriteBuffer, writeBuffer, tWriteLength);
-		switch (operation)
+		switch (tOperation)
 		{
 		case NO:
 		{

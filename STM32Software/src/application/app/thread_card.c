@@ -544,4 +544,5 @@ rt_exit_critical();
 va_end(arg_ptr);
 return (RT_EOK);
 }
+FINSH_FUNCTION_EXPORT(writeUserAreaOfNextCard, rt_err_t writeUserAreaOfNextCard(uint16_t offset, uint16_t dataLength, ...))
 

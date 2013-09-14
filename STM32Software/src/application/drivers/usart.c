@@ -63,7 +63,8 @@ static void RCC_Configuration(void)
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
 
 	/* Enable USART3 and GPIOB clocks */
-	RCC_APB2PeriphClockCmd(RCC_APB1Periph_USART3 | RCC_APB2Periph_GPIOB, ENABLE);
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
 }
 
 static void GPIO_Configuration(void)
@@ -93,12 +94,12 @@ static void GPIO_Configuration(void)
 	GPIO_Init(UART2_GPIO, &GPIO_InitStructure);
 
 	/* Configure USART3 Rx as input floating */
-	GPIO_InitStructure.GPIO_Pin = UART2_GPIO_RX;
+	GPIO_InitStructure.GPIO_Pin = UART3_GPIO_RX;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
 	GPIO_Init(UART3_GPIO, &GPIO_InitStructure);
 
 	/* Configure USART3 Tx as alternate function push-pull */
-	GPIO_InitStructure.GPIO_Pin = UART2_GPIO_TX;
+	GPIO_InitStructure.GPIO_Pin = UART3_GPIO_TX;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(UART3_GPIO, &GPIO_InitStructure);
@@ -294,7 +295,7 @@ static rt_size_t uartWrite(struct rt_device *dev, rt_off_t pos, const void *buff
 	}
 	else
 	{
-		while (rt_mutex_take(&pUart->writeLock, RT_TICK_MAX) != RT_EOK)
+		while (rt_mutex_take(&pUart->writeLock, RT_WAITING_FOREVER) != RT_EOK)
 		{
 		}
 		length += ringBufferPut(&pUart->pTxBuffer, (unsigned char *) buffer + length, size - length);

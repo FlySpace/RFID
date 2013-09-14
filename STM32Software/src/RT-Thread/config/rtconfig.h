@@ -15,15 +15,15 @@
 #define RT_TICK_PER_SECOND	1000
 
 /* SECTION: RT_DEBUG */
-//#define RT_DEBUG
-#define RT_DEBUG_MEM 1
-#define RT_DEBUG_MEMHEAP 1
-#define RT_DEBUG_MODULE 1
-#define RT_DEBUG_SCHEDULER 1
-#define RT_DEBUG_THREAD 1
+#define RT_DEBUG
+#define RT_DEBUG_MEM 0
+#define RT_DEBUG_MEMHEAP 0
+#define RT_DEBUG_MODULE 0
+#define RT_DEBUG_SCHEDULER 0
+#define RT_DEBUG_THREAD 0
 #define RT_DEBUG_TIMER 0
 #define RT_DEBUG_IRQ 0
-#define RT_DEBUG_IPC 1
+#define RT_DEBUG_IPC 0
 #define RT_DEBUG_CONTEXT_CHECK 1
 
 #define RT_USING_OVERFLOW_CHECK
@@ -47,14 +47,14 @@
 #define RT_USING_EVENT
 
 /* Using MailBox */
-#define RT_USING_MAILBOX
+//#define RT_USING_MAILBOX
 
 /* Using Message Queue */
-#define RT_USING_MESSAGEQUEUE
+//#define RT_USING_MESSAGEQUEUE
 
 /* SECTION: Memory Management */
 /* Using Memory Pool Management*/
-#define RT_USING_MEMPOOL
+//#define RT_USING_MEMPOOL
 
 /* Using Dynamic Heap Management */
 #define RT_USING_HEAP

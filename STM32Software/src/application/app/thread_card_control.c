@@ -32,6 +32,10 @@ void thread_card_control(void * param)
 	rt_thread_startup(card_thread);
 }
 
+rt_err_t startAutoReadCardData(){
+
+}
+
 rt_err_t deleteCardData()
 {
 	uint8_t temp[20];

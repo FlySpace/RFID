@@ -11,6 +11,8 @@
 #include "ringbuffer.h"
 #include "stm32f10x.h"
 #include "rtc.h"
+#include "finsh.h"
+
 
 #define THREAD_BOOT_NAME "boot"
 #define THREAD_BUTTON_NAME "button"

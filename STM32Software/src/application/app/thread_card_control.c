@@ -8,7 +8,6 @@
 #include "rtthread.h"
 #include "threads.h"
 #include "ringbuffer.h"
-#include "finsh.h"
 #include "stm32f10x.h"
 #include "usart.h"
 #include "rthw.h"
@@ -55,7 +54,7 @@ rt_err_t deleteCardData()
 	rt_hw_interrupt_enable(l);
 	return (RT_EOK);
 }
-FINSH_FUNCTION_EXPORT(deleteCardData, rt_err_t deleteCardData())
+FINSH_FUNCTION_EXPORT( deleteCardData, rt_err_t deleteCardData())
 
 rt_err_t lookCardData()
 {
@@ -107,7 +106,7 @@ rt_err_t lookCardData()
 	}
 	return (RT_EOK);
 }
-FINSH_FUNCTION_EXPORT(lookCardData, rt_err_t lookCardData())
+FINSH_FUNCTION_EXPORT( lookCardData, rt_err_t lookCardData())
 
 rt_err_t look(unsigned char * p, unsigned int len)
 {

@@ -545,7 +545,3 @@ va_end(arg_ptr);
 return (RT_EOK);
 }
 
-void printOneCardData()
-{
-}
-

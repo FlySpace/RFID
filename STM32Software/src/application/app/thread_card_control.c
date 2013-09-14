@@ -11,6 +11,7 @@
 #include "finsh.h"
 #include "stm32f10x.h"
 #include "usart.h"
+#include "rthw.h"
 
 #define POOL_SIZE_BIT_COUNT 10
 struct RingBuffer cardData;
@@ -32,18 +33,27 @@ void thread_card_control(void * param)
 	rt_thread_startup(card_thread);
 }
 
-rt_err_t startAutoReadCardData(){
+void printAndDeleteOneCardData()
+{
+}
 
+rt_err_t startAutoReadCardData()
+{
+	return (0);
 }
 
 rt_err_t deleteCardData()
 {
 	uint8_t temp[20];
 	rt_base_t l = rt_hw_interrupt_disable();
+	while (rt_sem_trytake(&cardDataSem) == RT_EOK)
+	{
+	}
 	while (ringBufferGet(&cardData, temp, 20) > 0)
 	{
 	}
 	rt_hw_interrupt_enable(l);
+	return (RT_EOK);
 }
 FINSH_FUNCTION_EXPORT(deleteCardData, rt_err_t deleteCardData())
 

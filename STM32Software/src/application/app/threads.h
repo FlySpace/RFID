@@ -30,6 +30,7 @@ struct CardDataHeader
 };
 
 extern struct RingBuffer cardData;
+extern struct rt_semaphore cardDataSem;
 
 enum CardOperation
 {

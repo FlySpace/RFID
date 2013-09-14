@@ -48,14 +48,11 @@
 
 /* Using MailBox */
 //#define RT_USING_MAILBOX
-
 /* Using Message Queue */
 //#define RT_USING_MESSAGEQUEUE
-
 /* SECTION: Memory Management */
 /* Using Memory Pool Management*/
 //#define RT_USING_MEMPOOL
-
 /* Using Dynamic Heap Management */
 #define RT_USING_HEAP
 
@@ -74,7 +71,7 @@
 #define RT_CONSOLEBUF_SIZE	128
 
 /*Idle Thread*/
-#define IDLE_THREAD_STACK_SIZE 128
+#define IDLE_THREAD_STACK_SIZE 256
 
 /* SECTION: finsh, a C-Express shell */
 #define RT_USING_FINSH

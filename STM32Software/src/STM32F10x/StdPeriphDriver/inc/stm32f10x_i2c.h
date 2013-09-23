@@ -4,7 +4,7 @@
   * @author  MCD Application Team
   * @version V3.5.0
   * @date    11-March-2011
-  * @brief   This file contains all the functions prototypes for the I2C firmware 
+  * @brief   This file contains all the functions prototypes for the I2C firmware
   *          library.
   ******************************************************************************
   * @attention
@@ -44,7 +44,7 @@
   */
 
 /** 
-  * @brief  I2C Init structure definition  
+  * @brief  I2C Init structure definition
   */
 
 typedef struct
@@ -70,7 +70,7 @@ typedef struct
 
 /**
   * @}
-  */ 
+  */
 
 
 /** @defgroup I2C_Exported_Constants
@@ -103,7 +103,7 @@ typedef struct
                                   ((CYCLE) == I2C_DutyCycle_2))
 /**
   * @}
-  */ 
+  */
 
 /** @defgroup I2C_acknowledgement
   * @{
@@ -139,7 +139,7 @@ typedef struct
                                              ((ADDRESS) == I2C_AcknowledgedAddress_10bit))
 /**
   * @}
-  */ 
+  */
 
 /** @defgroup I2C_registers 
   * @{
@@ -189,7 +189,7 @@ typedef struct
                                        ((POSITION) == I2C_PECPosition_Current))
 /**
   * @}
-  */ 
+  */
 
 /** @defgroup I2C_NCAK_position 
   * @{
@@ -201,7 +201,7 @@ typedef struct
                                          ((POSITION) == I2C_NACKPosition_Current))
 /**
   * @}
-  */ 
+  */
 
 /** @defgroup I2C_interrupts_definition 
   * @{
@@ -213,7 +213,7 @@ typedef struct
 #define IS_I2C_CONFIG_IT(IT) ((((IT) & (uint16_t)0xF8FF) == 0x00) && ((IT) != 0x00))
 /**
   * @}
-  */ 
+  */
 
 /** @defgroup I2C_interrupts_definition 
   * @{
@@ -252,7 +252,7 @@ typedef struct
   */
 
 /** 
-  * @brief  SR2 register flags  
+  * @brief  SR2 register flags
   */
 
 #define I2C_FLAG_DUALF                  ((uint32_t)0x00800000)
@@ -264,7 +264,7 @@ typedef struct
 #define I2C_FLAG_MSL                    ((uint32_t)0x00010000)
 
 /** 
-  * @brief  SR1 register flags  
+  * @brief  SR1 register flags
   */
 
 #define I2C_FLAG_SMBALERT               ((uint32_t)0x10008000)
@@ -304,43 +304,43 @@ typedef struct
   */
 
 /*========================================
-     
+
                      I2C Master Events (Events grouped in order of communication)
                                                         ==========================================*/
 /** 
   * @brief  Communication start
-  * 
-  * After sending the START condition (I2C_GenerateSTART() function) the master 
-  * has to wait for this event. It means that the Start condition has been correctly 
+  *
+  * After sending the START condition (I2C_GenerateSTART() function) the master
+  * has to wait for this event. It means that the Start condition has been correctly
   * released on the I2C bus (the bus is free, no other devices is communicating).
-  * 
+  *
   */
 /* --EV5 */
 #define  I2C_EVENT_MASTER_MODE_SELECT                      ((uint32_t)0x00030001)  /* BUSY, MSL and SB flag */
 
 /** 
   * @brief  Address Acknowledge
-  * 
-  * After checking on EV5 (start condition correctly released on the bus), the 
-  * master sends the address of the slave(s) with which it will communicate 
-  * (I2C_Send7bitAddress() function, it also determines the direction of the communication: 
-  * Master transmitter or Receiver). Then the master has to wait that a slave acknowledges 
-  * his address. If an acknowledge is sent on the bus, one of the following events will 
+  *
+  * After checking on EV5 (start condition correctly released on the bus), the
+  * master sends the address of the slave(s) with which it will communicate
+  * (I2C_Send7bitAddress() function, it also determines the direction of the communication:
+  * Master transmitter or Receiver). Then the master has to wait that a slave acknowledges
+  * his address. If an acknowledge is sent on the bus, one of the following events will
   * be set:
-  * 
-  *  1) In case of Master Receiver (7-bit addressing): the I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED 
+  *
+  *  1) In case of Master Receiver (7-bit addressing): the I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED
   *     event is set.
-  *  
-  *  2) In case of Master Transmitter (7-bit addressing): the I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED 
+  *
+  *  2) In case of Master Transmitter (7-bit addressing): the I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED
   *     is set
-  *  
-  *  3) In case of 10-Bit addressing mode, the master (just after generating the START 
-  *  and checking on EV5) has to send the header of 10-bit addressing mode (I2C_SendData() 
-  *  function). Then master should wait on EV9. It means that the 10-bit addressing 
-  *  header has been correctly sent on the bus. Then master should send the second part of 
-  *  the 10-bit address (LSB) using the function I2C_Send7bitAddress(). Then master 
-  *  should wait for event EV6. 
-  *     
+  *
+  *  3) In case of 10-Bit addressing mode, the master (just after generating the START
+  *  and checking on EV5) has to send the header of 10-bit addressing mode (I2C_SendData()
+  *  function). Then master should wait on EV9. It means that the 10-bit addressing
+  *  header has been correctly sent on the bus. Then master should send the second part of
+  *  the 10-bit address (LSB) using the function I2C_Send7bitAddress(). Then master
+  *  should wait for event EV6.
+  *
   */
 
 /* --EV6 */
@@ -351,34 +351,34 @@ typedef struct
 
 /** 
   * @brief Communication events
-  * 
-  * If a communication is established (START condition generated and slave address 
-  * acknowledged) then the master has to check on one of the following events for 
+  *
+  * If a communication is established (START condition generated and slave address
+  * acknowledged) then the master has to check on one of the following events for
   * communication procedures:
-  *  
-  * 1) Master Receiver mode: The master has to wait on the event EV7 then to read 
+  *
+  * 1) Master Receiver mode: The master has to wait on the event EV7 then to read
   *    the data received from the slave (I2C_ReceiveData() function).
-  * 
-  * 2) Master Transmitter mode: The master has to send data (I2C_SendData() 
+  *
+  * 2) Master Transmitter mode: The master has to send data (I2C_SendData()
   *    function) then to wait on event EV8 or EV8_2.
-  *    These two events are similar: 
-  *     - EV8 means that the data has been written in the data register and is 
+  *    These two events are similar:
+  *     - EV8 means that the data has been written in the data register and is
   *       being shifted out.
-  *     - EV8_2 means that the data has been physically shifted out and output 
+  *     - EV8_2 means that the data has been physically shifted out and output
   *       on the bus.
   *     In most cases, using EV8 is sufficient for the application.
   *     Using EV8_2 leads to a slower communication but ensure more reliable test.
-  *     EV8_2 is also more suitable than EV8 for testing on the last data transmission 
+  *     EV8_2 is also more suitable than EV8 for testing on the last data transmission
   *     (before Stop condition generation).
-  *     
-  *  @note In case the  user software does not guarantee that this event EV7 is 
-  *  managed before the current byte end of transfer, then user may check on EV7 
+  *
+  *  @note In case the  user software does not guarantee that this event EV7 is
+  *  managed before the current byte end of transfer, then user may check on EV7
   *  and BTF flag at the same time (ie. (I2C_EVENT_MASTER_BYTE_RECEIVED | I2C_FLAG_BTF)).
   *  In this case the communication may be slower.
-  * 
+  *
   */
 
-/* Master RECEIVER mode -----------------------------*/ 
+/* Master RECEIVER mode -----------------------------*/
 /* --EV7 */
 #define  I2C_EVENT_MASTER_BYTE_RECEIVED                    ((uint32_t)0x00030040)  /* BUSY, MSL and RXNE flags */
 
@@ -390,36 +390,36 @@ typedef struct
 
 
 /*========================================
-     
+
                      I2C Slave Events (Events grouped in order of communication)
                                                         ==========================================*/
 
 /** 
   * @brief  Communication start events
-  * 
-  * Wait on one of these events at the start of the communication. It means that 
-  * the I2C peripheral detected a Start condition on the bus (generated by master 
-  * device) followed by the peripheral address. The peripheral generates an ACK 
-  * condition on the bus (if the acknowledge feature is enabled through function 
+  *
+  * Wait on one of these events at the start of the communication. It means that
+  * the I2C peripheral detected a Start condition on the bus (generated by master
+  * device) followed by the peripheral address. The peripheral generates an ACK
+  * condition on the bus (if the acknowledge feature is enabled through function
   * I2C_AcknowledgeConfig()) and the events listed above are set :
-  *  
-  * 1) In normal case (only one address managed by the slave), when the address 
-  *   sent by the master matches the own address of the peripheral (configured by 
-  *   I2C_OwnAddress1 field) the I2C_EVENT_SLAVE_XXX_ADDRESS_MATCHED event is set 
+  *
+  * 1) In normal case (only one address managed by the slave), when the address
+  *   sent by the master matches the own address of the peripheral (configured by
+  *   I2C_OwnAddress1 field) the I2C_EVENT_SLAVE_XXX_ADDRESS_MATCHED event is set
   *   (where XXX could be TRANSMITTER or RECEIVER).
-  *    
-  * 2) In case the address sent by the master matches the second address of the 
-  *   peripheral (configured by the function I2C_OwnAddress2Config() and enabled 
-  *   by the function I2C_DualAddressCmd()) the events I2C_EVENT_SLAVE_XXX_SECONDADDRESS_MATCHED 
+  *
+  * 2) In case the address sent by the master matches the second address of the
+  *   peripheral (configured by the function I2C_OwnAddress2Config() and enabled
+  *   by the function I2C_DualAddressCmd()) the events I2C_EVENT_SLAVE_XXX_SECONDADDRESS_MATCHED
   *   (where XXX could be TRANSMITTER or RECEIVER) are set.
-  *   
-  * 3) In case the address sent by the master is General Call (address 0x00) and 
-  *   if the General Call is enabled for the peripheral (using function I2C_GeneralCallCmd()) 
-  *   the following event is set I2C_EVENT_SLAVE_GENERALCALLADDRESS_MATCHED.   
-  * 
+  *
+  * 3) In case the address sent by the master is General Call (address 0x00) and
+  *   if the General Call is enabled for the peripheral (using function I2C_GeneralCallCmd())
+  *   the following event is set I2C_EVENT_SLAVE_GENERALCALLADDRESS_MATCHED.
+  *
   */
 
-/* --EV1  (all the events below are variants of EV1) */   
+/* --EV1  (all the events below are variants of EV1) */
 /* 1) Case of One Single Address managed by the slave */
 #define  I2C_EVENT_SLAVE_RECEIVER_ADDRESS_MATCHED          ((uint32_t)0x00020002) /* BUSY and ADDR flags */
 #define  I2C_EVENT_SLAVE_TRANSMITTER_ADDRESS_MATCHED       ((uint32_t)0x00060082) /* TRA, BUSY, TXE and ADDR flags */
@@ -433,32 +433,32 @@ typedef struct
 
 /** 
   * @brief  Communication events
-  * 
-  * Wait on one of these events when EV1 has already been checked and: 
-  * 
+  *
+  * Wait on one of these events when EV1 has already been checked and:
+  *
   * - Slave RECEIVER mode:
-  *     - EV2: When the application is expecting a data byte to be received. 
-  *     - EV4: When the application is expecting the end of the communication: master 
+  *     - EV2: When the application is expecting a data byte to be received.
+  *     - EV4: When the application is expecting the end of the communication: master
   *       sends a stop condition and data transmission is stopped.
-  *    
+  *
   * - Slave Transmitter mode:
-  *    - EV3: When a byte has been transmitted by the slave and the application is expecting 
+  *    - EV3: When a byte has been transmitted by the slave and the application is expecting
   *      the end of the byte transmission. The two events I2C_EVENT_SLAVE_BYTE_TRANSMITTED and
-  *      I2C_EVENT_SLAVE_BYTE_TRANSMITTING are similar. The second one can optionally be 
+  *      I2C_EVENT_SLAVE_BYTE_TRANSMITTING are similar. The second one can optionally be
   *      used when the user software doesn't guarantee the EV3 is managed before the
   *      current byte end of transfer.
-  *    - EV3_2: When the master sends a NACK in order to tell slave that data transmission 
-  *      shall end (before sending the STOP condition). In this case slave has to stop sending 
+  *    - EV3_2: When the master sends a NACK in order to tell slave that data transmission
+  *      shall end (before sending the STOP condition). In this case slave has to stop sending
   *      data bytes and expect a Stop condition on the bus.
-  *      
-  *  @note In case the  user software does not guarantee that the event EV2 is 
-  *  managed before the current byte end of transfer, then user may check on EV2 
+  *
+  *  @note In case the  user software does not guarantee that the event EV2 is
+  *  managed before the current byte end of transfer, then user may check on EV2
   *  and BTF flag at the same time (ie. (I2C_EVENT_SLAVE_BYTE_RECEIVED | I2C_FLAG_BTF)).
   * In this case the communication may be slower.
   *
   */
 
-/* Slave RECEIVER mode --------------------------*/ 
+/* Slave RECEIVER mode --------------------------*/
 /* --EV2 */
 #define  I2C_EVENT_SLAVE_BYTE_RECEIVED                     ((uint32_t)0x00020040)  /* BUSY and RXNE flags */
 /* --EV4  */
@@ -671,14 +671,14 @@ void I2C_ClearITPendingBit(I2C_TypeDef* I2Cx, uint32_t I2C_IT);
 #endif /*__STM32F10x_I2C_H */
 /**
   * @}
-  */ 
+  */
 
 /**
   * @}
-  */ 
+  */
 
 /**
   * @}
-  */ 
+  */
 
 /******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/

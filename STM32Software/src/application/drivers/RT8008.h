@@ -8,8 +8,8 @@
 #ifndef RT8008_H_
 #define RT8008_H_
 
+void RT8008_Enable(void);
 
 
 #endif /* RT8008_H_ */
 
-void RT8008_Enable(void);

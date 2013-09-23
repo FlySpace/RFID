@@ -11,6 +11,7 @@
 #include "ringbuffer.h"
 #include "usart.h"
 #include "string.h"
+#include "buzzer.h"
 
 rt_err_t findPacket(rt_size_t * packetLen, struct UARTDevice * pUart, rt_uint8_t messageType, rt_uint8_t code,
 		rt_tick_t timeOut);
@@ -30,7 +31,7 @@ enum CardOperation operation = NO;
 uint16_t writeOffset;
 uint16_t writeLength;
 uint8_t * writeBuffer;
-uint8_t writeBufferFlag;
+uint8_t writeBufferFlag = 0;
 
 static const rt_uint8_t cmdReset[] =
 { 0xBB, 0x00, 0x08, 0x00, 0x00, 0x7E, 0x0B, 0x96 };
@@ -88,6 +89,8 @@ static rt_uint8_t * tidArea;
 static uint8_t tidAreaFlag = 0;
 static rt_uint8_t * userArea;
 static uint8_t userAreaFlag = 0;
+static uint8_t * tWriteBuffer;
+static uint8_t tWriteBufferFlag = 0;
 void thread_card(void * param)
 {
 	rt_device_t uart2 = rt_device_find("uart2");
@@ -106,6 +109,7 @@ void thread_card(void * param)
 	rt_device_open(uart2, RT_DEVICE_OFLAG_RDWR);
 	while (1)
 	{
+		buzzerDisable();
 		//Reset
 		rt_device_write(uart2, 0, cmdReset, sizeof(cmdReset));
 		rt_thread_delay(1000);
@@ -179,8 +183,6 @@ void thread_card(void * param)
 		enum CardOperation tOperation = operation;
 		uint16_t tWriteOffset = writeOffset;
 		uint16_t tWriteLength = writeLength;
-		uint8_t * tWriteBuffer = writeBuffer;
-		uint8_t tWriteBufferFlag;
 		rt_exit_critical();
 		mallocAfterFree(tWriteLength, &tWriteBuffer, &tWriteBufferFlag);
 		memcpy(tWriteBuffer, writeBuffer, tWriteLength);
@@ -188,6 +190,7 @@ void thread_card(void * param)
 		{
 		case NO:
 		{
+			operation = AUTO_READ;
 			break;
 		}
 		case AUTO_READ:
@@ -254,8 +257,15 @@ void thread_card(void * param)
 				ringBufferPut(&cardData, tidArea + 5, header.tid);
 				ringBufferPut(&cardData, userArea + 5, header.user);
 				rt_sem_release(&cardDataSem);
+				lookCardData();
+				deleteCardData();
 			}
 			rt_exit_critical();
+
+			buzzerEnable();
+			rt_thread_delay(150);
+			buzzerDisable();
+
 			break;
 		}
 		case WRITE_RESERVED:
@@ -269,7 +279,7 @@ void thread_card(void * param)
 			}
 			mallocAfterFree(packetLen, &tempBuffer, &tempBufferFlag);
 			rt_device_read(uart2, 0, tempBuffer, packetLen);
-			operation = NO;
+			operation = AUTO_READ;
 			break;
 		}
 		case WRITE_EPC:
@@ -283,7 +293,7 @@ void thread_card(void * param)
 			}
 			mallocAfterFree(packetLen, &tempBuffer, &tempBufferFlag);
 			rt_device_read(uart2, 0, tempBuffer, packetLen);
-			operation = NO;
+			operation = AUTO_READ;
 			break;
 		}
 		case WRITE_TID:
@@ -297,7 +307,7 @@ void thread_card(void * param)
 			}
 			mallocAfterFree(packetLen, &tempBuffer, &tempBufferFlag);
 			rt_device_read(uart2, 0, tempBuffer, packetLen);
-			operation = NO;
+			operation = AUTO_READ;
 			break;
 		}
 		case WRITE_USER:
@@ -305,13 +315,13 @@ void thread_card(void * param)
 			packetLen = mallocWriteAreaCmd(&tempBuffer, &tempBufferFlag, 0x00000000, autoReadPacket + 7,
 					autoReadPacketLen - 10, 0x03, tWriteOffset, tWriteBuffer, tWriteLength);
 			rt_device_write(uart2, 0, tempBuffer, packetLen);
-			if (findPacket(&packetLen, pUart, rspWriteArea[1], rspWriteArea[2], 500) != RT_EOK)
+			if (findPacket(&packetLen, pUart, rspWriteArea[1], rspWriteArea[2], 2000) != RT_EOK)
 			{
 				continue;
 			}
 			mallocAfterFree(packetLen, &tempBuffer, &tempBufferFlag);
 			rt_device_read(uart2, 0, tempBuffer, packetLen);
-			operation = NO;
+			operation = AUTO_READ;
 			break;
 		}
 		}
@@ -483,7 +493,7 @@ uint16_t mallocWriteAreaCmd(uint8_t ** buffer, uint8_t * bufferFlag, uint32_t ap
 	t[i++] = 0xBB;
 	t[i++] = 0x00;
 	t[i++] = 0x46;
-	uint16_t pl = 11 + epcLen;
+	uint16_t pl = 11 + epcLen + dl;
 	t[i++] = ((uint8_t *) &pl)[1];
 	t[i++] = ((uint8_t *) &pl)[0];
 	t[i++] = ((uint8_t *) &ap)[3];
@@ -526,7 +536,7 @@ rt_err_t startAutoLookAndDeleteCardData()
 	return (0);
 }
 
-rt_err_t writeUserAreaOfNextCard(uint16_t offset, uint16_t dataLength, ...)
+rt_err_t writeUserArea(uint16_t offset, uint16_t dataLength, ...)
 {
 	va_list arg_ptr;
 	va_start(arg_ptr, dataLength);
@@ -544,5 +554,5 @@ rt_exit_critical();
 va_end(arg_ptr);
 return (RT_EOK);
 }
-FINSH_FUNCTION_EXPORT(writeUserAreaOfNextCard, rt_err_t writeUserAreaOfNextCard(uint16_t offset, uint16_t dataLength, ...))
+FINSH_FUNCTION_EXPORT(writeUserArea, writeUserArea(uint16_t offset, uint16_t dataLength, ...))
 

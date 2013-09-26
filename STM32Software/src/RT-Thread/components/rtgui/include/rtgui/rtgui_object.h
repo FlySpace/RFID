@@ -150,6 +150,7 @@ extern "C" {
 
 void rtgui_object_set_id(struct rtgui_object *obj, rt_uint32_t id);
 rt_uint32_t rtgui_object_get_id(struct rtgui_object *obj);
+struct rtgui_app;
 struct rtgui_object* rtgui_get_object(struct rtgui_app *app, rt_uint32_t id);
 struct rtgui_object* rtgui_get_self_object(rt_uint32_t id);
 

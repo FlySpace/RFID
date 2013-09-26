@@ -8,6 +8,6 @@
 #ifndef OLED_H_
 #define OLED_H_
 
-
+void oledPowerOn(void);
 
 #endif /* OLED_H_ */

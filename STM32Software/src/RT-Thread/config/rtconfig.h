@@ -47,9 +47,9 @@
 #define RT_USING_EVENT
 
 /* Using MailBox */
-//#define RT_USING_MAILBOX
+#define RT_USING_MAILBOX
 /* Using Message Queue */
-//#define RT_USING_MESSAGEQUEUE
+#define RT_USING_MESSAGEQUEUE
 /* SECTION: Memory Management */
 /* Using Memory Pool Management*/
 //#define RT_USING_MEMPOOL
@@ -146,7 +146,7 @@
 /* #define RT_USING_RTGUI */
 
 /* name length of RTGUI object */
-//#define RTGUI_NAME_MAX		12
+#define RTGUI_NAME_MAX		12
 /* support 16 weight font */
 //#define RTGUI_USING_FONT16
 /* support Chinese font */

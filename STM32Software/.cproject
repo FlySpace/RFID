@@ -55,6 +55,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/application/drivers}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/application/app}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/application/utils/ringbuffer}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/RT-Thread/components}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/RT-Thread/components/finsh}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/RT-Thread/components/rtgui/include/rtgui}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/RT-Thread/components/rtgui/include/rtgui/widgets}&quot;"/>
@@ -110,9 +111,60 @@
 							<tool id="iar.arm.toolchain.archive.v5.4.0.1101879286" name="IAR Library Builder for ARM" superClass="iar.arm.toolchain.archive.v5.4.0"/>
 						</toolChain>
 					</folderInfo>
+					<folderInfo id="iar.arm.toolchain.project.exe.configuration.debug.v5.4.0.600758535.1277324332" name="/" resourcePath="src">
+						<toolChain id="iar.arm.toolchain.project.exe.configuration.debug.toolchain.v5.4.0.1707685020" name="IAR Toolchain for ARM - 6.x" superClass="iar.arm.toolchain.project.exe.configuration.debug.toolchain.v5.4.0" unusedChildren="">
+							<option id="iar.arm.toolchain.option.cpuCore.v5.4.0.1542160744.614777338" name="Processor core:" superClass="iar.arm.toolchain.option.cpuCore.v5.4.0.1542160744"/>
+							<option id="iar.arm.toolchain.option.endianMode.v5.4.0.1052732323.1587677862" name="Endian mode:" superClass="iar.arm.toolchain.option.endianMode.v5.4.0.1052732323"/>
+							<option id="iar.arm.toolchain.option.bigEndianFormat.v5.4.0.2016519263.1508645490" name="Big-endian format:" superClass="iar.arm.toolchain.option.bigEndianFormat.v5.4.0.2016519263"/>
+							<option id="iar.arm.toolchain.option.printfFormatter.v5.4.0.1448856890.136950322" name="Printf formatter:" superClass="iar.arm.toolchain.option.printfFormatter.v5.4.0.1448856890"/>
+							<option id="iar.arm.toolchain.option.scanfFormatter.v5.4.0.427817988.702104908" name="Scanf formatter:" superClass="iar.arm.toolchain.option.scanfFormatter.v5.4.0.427817988"/>
+							<option id="iar.arm.toolchain.option.bufferedOutput.v6.1.0.1033816279.486526320" name="Buffered terminal output" superClass="iar.arm.toolchain.option.bufferedOutput.v6.1.0.1033816279"/>
+							<option id="iar.arm.toolchain.option.mfc.v5.5.2.1522235707.1819327832" name="Enable multi-file compilation" superClass="iar.arm.toolchain.option.mfc.v5.5.2.1522235707"/>
+							<option id="iar.arm.toolchain.option.useCMSIS.v6.2.2.1685516956.1489721819" name="Use CMSIS" superClass="iar.arm.toolchain.option.useCMSIS.v6.2.2.1685516956"/>
+							<option id="iar.arm.toolchain.option.fpu.v5.4.0.1306359479.2062002205" name="FPU:" superClass="iar.arm.toolchain.option.fpu.v5.4.0.1306359479"/>
+							<option id="iar.arm.toolchain.option.libraryConfig.v5.4.0.1103605850.957707046" name="Library:" superClass="iar.arm.toolchain.option.libraryConfig.v5.4.0.1103605850"/>
+							<option id="iar.arm.toolchain.option.misra-c.enable.1527125903.337117264" name="Enable MISRA-C" superClass="iar.arm.toolchain.option.misra-c.enable.1527125903"/>
+							<option id="iar.arm.toolchain.option.deviceInfo.v5.4.3.1688421487.1162660515" name="Device info storage option" superClass="iar.arm.toolchain.option.deviceInfo.v5.4.3.1688421487"/>
+							<option id="iar.arm.toolchain.option.deviceName.v5.5.0.86260150.452329875" name="Device (change with Project &gt; Select Device...)" superClass="iar.arm.toolchain.option.deviceName.v5.5.0.86260150"/>
+							<option id="iar.arm.toolchain.option.deviceTag.v6.3.1.2063384424.1294096620" name="Device tag storage option" superClass="iar.arm.toolchain.option.deviceTag.v6.3.1.2063384424"/>
+							<option id="iar.arm.toolchain.option.semihosted.v5.4.0.43682215.1862826170" name="Include semihosting interface" superClass="iar.arm.toolchain.option.semihosted.v5.4.0.43682215"/>
+							<option id="iar.arm.toolchain.option.lowLevelInterfaceCortex.v5.4.0.481285896.1351838427" name="Library low-level&#10;interface implementation&#10;(Cortex-M cores):" superClass="iar.arm.toolchain.option.lowLevelInterfaceCortex.v5.4.0.481285896"/>
+							<option id="iar.arm.toolchain.option.useDSPLibrary.v6.2.2.1688794654.1983240811" name="DSP Library" superClass="iar.arm.toolchain.option.useDSPLibrary.v6.2.2.1688794654"/>
+							<targetPlatform binaryParser="org.eclipse.cdt.core.ELF" id="iar.arm.toolchain.targetPlatform.v5.4.0" isAbstract="false" name="IAR Target platform for ARM (ELF)" osList="win32,linux" superClass="iar.arm.toolchain.targetPlatform.v5.4.0"/>
+							<tool id="iar.arm.toolchain.compiler.v5.4.1.422507216" name="IAR C/C++ Compiler for ARM" superClass="iar.arm.toolchain.compiler.v5.4.1.910868883">
+								<option id="iar.arm.toolchain.compiler.option.incPaths.v5.4.0.196919178" name="Additional include directories" superClass="iar.arm.toolchain.compiler.option.incPaths.v5.4.0" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/STM32F10x/CMSIS}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/STM32F10x/CMSIS/CM3}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/STM32F10x/CMSIS/config}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/STM32F10x/StdPeriphDriver/inc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/RT-Thread/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/RT-Thread/config}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/application/drivers}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/application/app}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/application/utils/ringbuffer}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/RT-Thread/components/finsh}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/RT-Thread/components/rtgui/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/RT-Thread/components/rtgui/server}&quot;"/>
+								</option>
+								<option defaultValue="true" id="iar.arm.toolchain.compiler.option.optCSE.v5.4.0.1095781221" name="Disable common subexpression elimination" superClass="iar.arm.toolchain.compiler.option.optCSE.v5.4.0" valueType="boolean"/>
+								<option defaultValue="true" id="iar.arm.toolchain.compiler.option.optUnroll.v5.4.0.903976317" name="Disable loop unrolling" superClass="iar.arm.toolchain.compiler.option.optUnroll.v5.4.0" valueType="boolean"/>
+								<option defaultValue="true" id="iar.arm.toolchain.compiler.option.optInline.v5.4.0.1638008882" name="Disable function inlining" superClass="iar.arm.toolchain.compiler.option.optInline.v5.4.0" valueType="boolean"/>
+								<option defaultValue="true" id="iar.arm.toolchain.compiler.option.optCodeMotion.v5.4.0.1779966900" name="Disable code motion" superClass="iar.arm.toolchain.compiler.option.optCodeMotion.v5.4.0" valueType="boolean"/>
+								<option defaultValue="true" id="iar.arm.toolchain.compiler.option.optAliasAnalysis.v5.4.0.400842827" name="Disable type-based alias analysis" superClass="iar.arm.toolchain.compiler.option.optAliasAnalysis.v5.4.0" valueType="boolean"/>
+								<option defaultValue="true" id="iar.arm.toolchain.compiler.option.optStaticClustering.v5.4.0.1136251283" name="Disable static clustering" superClass="iar.arm.toolchain.compiler.option.optStaticClustering.v5.4.0" valueType="boolean"/>
+								<option defaultValue="true" id="iar.arm.toolchain.compiler.option.optScheduling.v5.4.0.1098084499" name="Disable instruction scheduling" superClass="iar.arm.toolchain.compiler.option.optScheduling.v5.4.0" valueType="boolean"/>
+								<inputType id="iar.arm.toolchain.compiler.inputType.v5.4.1.555731298" name="IAR C/C++ Compiler Input Type" superClass="iar.arm.toolchain.compiler.inputType.v5.4.1"/>
+							</tool>
+							<tool id="iar.arm.toolchain.assembler.v5.4.0.1802175537" name="IAR Assembler for ARM" superClass="iar.arm.toolchain.assembler.v5.4.0.1022486830">
+								<inputType id="iar.arm.toolchain.assembler.inputType.asmFile.v5.4.0.464097550" name="IAR Assembler input type for ARM (asm, s)" superClass="iar.arm.toolchain.assembler.inputType.asmFile.v5.4.0"/>
+							</tool>
+							<tool id="iar.arm.toolchain.linker.v5.4.0.1766352716" name="IAR Linker for ARM" superClass="iar.arm.toolchain.linker.v5.4.0.1583836903"/>
+							<tool id="iar.arm.toolchain.archive.v5.4.0.487209421" name="IAR Library Builder for ARM" superClass="iar.arm.toolchain.archive.v5.4.0.1101879286"/>
+						</toolChain>
+					</folderInfo>
 					<fileInfo id="iar.arm.toolchain.project.exe.configuration.debug.v5.4.0.600758535.727570552" name="stm32f10x.h" rcbsApplicability="disable" resourcePath="src/STM32F10x/CMSIS/stm32f10x.h" toolsToInvoke=""/>
 					<sourceEntries>
-						<entry excluding="STM32F10x_StdPeriph_Lib_V3.5.0/Libraries/CMSIS/CM3/DeviceSupport/ST/STM32F10x/startup/iar/startup_stm32f10x_xl.s" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="src"/>
+						<entry excluding="RT-Thread/components/rtgui/common/font_fnt.c|RT-Thread/components/rtgui/common/font_mph-tmpl.c|STM32F10x_StdPeriph_Lib_V3.5.0/Libraries/CMSIS/CM3/DeviceSupport/ST/STM32F10x/startup/iar/startup_stm32f10x_xl.s" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="src"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -168,7 +220,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="src/STM32F10x_StdPeriph_Lib_V3.5.0/Libraries/CMSIS/CM3/DeviceSupport/ST/STM32F10x/startup/iar/startup_stm32f10x_xl.s" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="src/RT-Thread/components/rtgui/common/font_fnt.c|src/RT-Thread/components/rtgui/common/font_mph-tmpl.c|src/STM32F10x_StdPeriph_Lib_V3.5.0/Libraries/CMSIS/CM3/DeviceSupport/ST/STM32F10x/startup/iar/startup_stm32f10x_xl.s" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

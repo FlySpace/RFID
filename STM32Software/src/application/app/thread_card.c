@@ -168,6 +168,7 @@ void thread_card(void * param)
 		}
 		mallocAfterFree(packetLen, &tempBuffer, &tempBufferFlag);
 		rt_device_read(uart2, 0, tempBuffer, packetLen);
+		rt_thread_delay(500);
 		//Look Condition
 		uint8_t sameCard = 0;
 		if (lastTypeCU2CRC[0] == autoReadPacket[autoReadPacketLen - 2]
@@ -257,8 +258,6 @@ void thread_card(void * param)
 				ringBufferPut(&cardData, tidArea + 5, header.tid);
 				ringBufferPut(&cardData, userArea + 5, header.user);
 				rt_sem_release(&cardDataSem);
-				lookCardData();
-				deleteCardData();
 			}
 			rt_exit_critical();
 
@@ -279,7 +278,8 @@ void thread_card(void * param)
 			}
 			mallocAfterFree(packetLen, &tempBuffer, &tempBufferFlag);
 			rt_device_read(uart2, 0, tempBuffer, packetLen);
-			operation = AUTO_READ;
+			operation = NO;
+			rt_kprintf("Write reserved area complete.\n");
 			break;
 		}
 		case WRITE_EPC:
@@ -293,7 +293,8 @@ void thread_card(void * param)
 			}
 			mallocAfterFree(packetLen, &tempBuffer, &tempBufferFlag);
 			rt_device_read(uart2, 0, tempBuffer, packetLen);
-			operation = AUTO_READ;
+			operation = NO;
+			rt_kprintf("Write EPC area complete.\n");
 			break;
 		}
 		case WRITE_TID:
@@ -307,7 +308,8 @@ void thread_card(void * param)
 			}
 			mallocAfterFree(packetLen, &tempBuffer, &tempBufferFlag);
 			rt_device_read(uart2, 0, tempBuffer, packetLen);
-			operation = AUTO_READ;
+			operation = NO;
+			rt_kprintf("Write TID area complete.\n");
 			break;
 		}
 		case WRITE_USER:
@@ -321,7 +323,8 @@ void thread_card(void * param)
 			}
 			mallocAfterFree(packetLen, &tempBuffer, &tempBufferFlag);
 			rt_device_read(uart2, 0, tempBuffer, packetLen);
-			operation = AUTO_READ;
+			operation = NO;
+			rt_kprintf("Write user area complete.\n");
 			break;
 		}
 		}
@@ -519,21 +522,82 @@ uint16_t mallocWriteAreaCmd(uint8_t ** buffer, uint8_t * bufferFlag, uint32_t ap
 	return (19 + epcLen + dl);
 }
 
+void popAndPrintOneCardData(struct RingBuffer * pBuffer)
+{
+	struct CardDataHeader header;
+	uint8_t * buffer;
+	rt_kprintf("********************************\n");
+	ringBufferGet(pBuffer, (uint8_t *) &header, sizeof(header));
+	rt_kprintf("Time: %.4d-%.2d-%.2d %.2d:%.2d:%.2d\n", header.time.tm_year, header.time.tm_mon, header.time.tm_mday,
+			header.time.tm_hour, header.time.tm_min, header.time.tm_sec);
+	//
+	buffer = rt_malloc(header.reserved);
+	ringBufferGet(pBuffer, buffer, header.reserved);
+	rt_kprintf("Reserved:\n");
+	for (int j = 0; j < header.reserved; j++)
+	{
+		rt_kprintf("%.2X ", buffer[j]);
+	}
+	rt_kprintf("\n");
+	rt_free(buffer);
+	//
+	buffer = rt_malloc(header.epc);
+	ringBufferGet(pBuffer, buffer, header.epc);
+	rt_kprintf("\nEPC:\n");
+	for (int j = 0; j < header.epc; j++)
+	{
+		rt_kprintf("%.2X ", buffer[j]);
+	}
+	rt_kprintf("\n");
+	rt_free(buffer);
+	//
+	buffer = rt_malloc(header.tid);
+	ringBufferGet(pBuffer, buffer, header.tid);
+	rt_kprintf("\nTID:\n");
+	for (int j = 0; j < header.tid; j++)
+	{
+		rt_kprintf("%.2X ", buffer[j]);
+	}
+	rt_kprintf("\n");
+	rt_free(buffer);
+	//
+	buffer = rt_malloc(header.user);
+	ringBufferGet(pBuffer, buffer, header.user);
+	rt_kprintf("\nUser:\n");
+	for (int j = 0; j < header.user; j++)
+	{
+		rt_kprintf("%.2X ", buffer[j]);
+	}
+	rt_kprintf("\n");
+	rt_free(buffer);
+}
+
+static uint8_t autoLookAndDeleteFlag = 0;
 void thread_autoLookAndDeleteCardData(void * param)
 {
 	while (1)
 	{
-		while (rt_sem_take(&cardDataSem, RT_WAITING_FOREVER) != RT_EOK)
+		if (!autoLookAndDeleteFlag)
 		{
+			rt_thread_delay(500);
+			continue;
 		}
-		rt_enter_critical();
-		rt_exit_critical();
+		if (rt_sem_trytake(&cardDataSem) != RT_EOK)
+		{
+			rt_thread_delay(500);
+			continue;
+		}
+		popAndPrintOneCardData(&cardData);
 	}
 }
 
 rt_err_t startAutoLookAndDeleteCardData()
 {
-	return (0);
+	rt_enter_critical();
+	operation = AUTO_READ;
+	autoLookAndDeleteFlag = 1;
+	rt_exit_critical();
+	return (RT_EOK);
 }
 
 rt_err_t writeUserArea(uint16_t offset, uint16_t dataLength, ...)
